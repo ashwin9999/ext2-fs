@@ -7,24 +7,25 @@ using namespace std;
  * Open the file and return a pointer to a VDI file structure
  */
 
-VDIFile *vdiOpen(char *fn){
-
+int vdiOpen(char *fn){
+  int vdifile = open(fn,O_RDWR); //Open file in read/write mode. LINUX system call
+  if (vdifile < 0) return 1; 
+  return vdifile;
 }
 
 /**
  * Close the VDIFile 
  */
 
-void vdiClose(VDIFile *f){
-
-
+void vdiClose(int f){
+  close(f);
 }
 
 /**
  * Mimic the lseek() system call
  */
 
-off_t vdiSeek(VDIFile *f, off_t offset, int whence){
+off_t vdiSeek(int f, off_t offset, int whence){
 
 
 
@@ -34,8 +35,8 @@ off_t vdiSeek(VDIFile *f, off_t offset, int whence){
  * Mimic the read() system call (reading from an unallocated page returns zero in all bytes read from the page
  */
 
-ssize_t vdiRead(VDIFile *f, void *buf, ssize_t n){
-
+ssize_t vdiRead(int *f, void *buf, ssize_t n){
+  
 
 }
 
@@ -45,6 +46,6 @@ ssize_t vdiRead(VDIFile *f, void *buf, ssize_t n){
  */
 
 
-ssize_t vdiWrite(VDIFile *f, void *buf, ssize_t n){
+ssize_t vdiWrite(int *f, void *buf, ssize_t n){
 
 }
