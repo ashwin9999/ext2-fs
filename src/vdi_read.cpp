@@ -36,8 +36,8 @@ off_t vdiSeek(int f, off_t offset, int whence){
  */
 
 ssize_t vdiRead(int f, void *buf, ssize_t n){
-  
-
+  if (read(f, *buf, n) != 512) return 1;
+  return 0;
 }
 
 
@@ -47,5 +47,5 @@ ssize_t vdiRead(int f, void *buf, ssize_t n){
 
 
 ssize_t vdiWrite(int f, void *buf, ssize_t n){
-
+  
 }
