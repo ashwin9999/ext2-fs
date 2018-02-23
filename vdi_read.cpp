@@ -8,19 +8,21 @@ using namespace std;
 
 VDIFile *vdiOpen(char *fn){
   VDIFile *file;
-  /*file->cursor = open(fn, O_RDWR); //Open file in read/write mode. LINUX system call
+  file->cursor = open(fn, O_RDWR); //Open file in read/write mode. LINUX system call
   if (file->cursor < 0){
     cout << "Cannot open the file" << endl;
-    }*/
-  file->fileStructure.open(fn, ios::in | ios::out | ios::binary);
-  //file->cursor = 0;
-  if ((file->fileStructure.rdstate() & std::ifstream::failbit ) != 0 )
-    std::cerr << "Error opening 'test.txt'\n";
+  }
+  cout << "olpen call done"<<endl;
+  //file->fileStructure.open(fn, ios::in | ios::out | ios::binary);
+  //file->fileStructure.open(fn);
+  file->cursor = 0;
+  //if ((file->fileStructure.rdstate() & std::ifstream::failbit ) != 0 )
+    //std::cerr << "Error opening 'test.txt'\n";
   return file;
 }
 
 /**
- * Close the VDIFile 
+ * Close the VDIFile
  */
 
 void vdiClose(VDIFile *f){
@@ -32,11 +34,28 @@ void vdiClose(VDIFile *f){
  */
 
 off_t vdiSeek(VDIFile *f, off_t offset, int whence){
-  off_t result = lseek(f->cursor, offset, whence);
-  if (result < 0){
-    return -1;
+  //off_t result = lseek(f->cursor, offset, whence);
+  //if (result < 0){
+  //  return -1;
+  //}
+  off_t result;
+
+  if(whence == SEEK_SET){
+    result = offset;
   }
+  else if(whence == SEEK_CUR){
+    result = f->cursor + offset;
+  }
+  else if(whence == SEEK_END){
+    // TODO:Implement later if needed
+  }
+  cout << "Result in seek: " << result << endl;
+  //f->fileStructure.seekg((int)result);
   f->cursor = result;
+  f->fileStructure.clear();
+  cout<< "cleared"<<endl;
+  f->fileStructure.seekg(result);
+  cout << "set vars"<<endl;
   return result;
 }
 
@@ -52,12 +71,21 @@ ssize_t vdiRead(VDIFile *f, void *buf, ssize_t n){
   if (result != n){
     return -1;
     }*/
-  char *buffer = new char[n];
+  //char *buffer = new char[n];
+  char buffer[100];
   cout << "n " << n << endl;
-  f->fileStructure.read(buffer,int(n));
-  cout << "n " << n << endl;
+  //f->fileStructure.seekg(f->cursor);
+  if(!f->fileStructure.is_open()){
+    cout << "Error" << endl;
+  }
+  cout<<"about to read"<<endl;
+  f->fileStructure.read(buffer, n);
+  if(!f->fileStructure){
+    cout << "Error" << endl;
+  }
+  cout << "Read " << n << endl;
   buf = buffer;
-  return 1;
+  return f->fileStructure.gcount();
 }
 
 
@@ -67,7 +95,5 @@ ssize_t vdiRead(VDIFile *f, void *buf, ssize_t n){
 
 
 ssize_t vdiWrite(VDIFile *f, void *buf, ssize_t n){
-  
+
 }
-
-
