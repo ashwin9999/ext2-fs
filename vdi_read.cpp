@@ -1,99 +1,71 @@
 #include "vdi_read.h"
+
 using namespace std;
 
-
-/**
- * Open the file and return a pointer to a VDI file structure
- */
-
 VDIFile *vdiOpen(char *fn){
-  VDIFile *file;
-  file->cursor = open(fn, O_RDWR); //Open file in read/write mode. LINUX system call
-  if (file->cursor < 0){
-    cout << "Cannot open the file" << endl;
-  }
-  cout << "olpen call done"<<endl;
-  //file->fileStructure.open(fn, ios::in | ios::out | ios::binary);
-  //file->fileStructure.open(fn);
-  file->cursor = 0;
-  //if ((file->fileStructure.rdstate() & std::ifstream::failbit ) != 0 )
-    //std::cerr << "Error opening 'test.txt'\n";
-  return file;
+  VDIFile file;
+  file.cursor = 0;
+  file.fileSize = 0;
+  cout << "was at open" << endl;
+  file.fileStructure.open(fn, ios::in | ios::out | ios::binary | ios::ate);
+  cout << "opened the file" << endl;
+  file.fileSize = (int) file.fileStructure.tellg();
+  file.fileStructure.seekg(0,ios::beg);
+  VDIFile *ptr = (VDIFile*) malloc(sizeof(VDIFile));
+  ptr = &file;
+  return ptr;
 }
-
-/**
- * Close the VDIFile
- */
 
 void vdiClose(VDIFile *f){
-  close(f->cursor);
+  f->fileStructure.close();
 }
-
-/**
- * Mimic the lseek() system call
- */
 
 off_t vdiSeek(VDIFile *f, off_t offset, int whence){
-  //off_t result = lseek(f->cursor, offset, whence);
-  //if (result < 0){
-  //  return -1;
-  //}
-  off_t result;
-
+  cout << "Before seek" << endl;
   if(whence == SEEK_SET){
-    result = offset;
+    f->fileStructure.seekg(offset, ios::beg);
+    cout << "Inside seek" << endl;
+    f->cursor = offset;
   }
-  else if(whence == SEEK_CUR){
-    result = f->cursor + offset;
+  if(whence == SEEK_CUR){
+    f->fileStructure.seekg(offset, ios::cur);
+    f->cursor += offset;
   }
-  else if(whence == SEEK_END){
-    // TODO:Implement later if needed
+  if(whence == SEEK_END){
+    f->fileStructure.seekg(offset, ios::end);
+    f->cursor = offset + f->fileSize;
   }
-  cout << "Result in seek: " << result << endl;
-  //f->fileStructure.seekg((int)result);
-  f->cursor = result;
-  f->fileStructure.clear();
-  cout<< "cleared"<<endl;
-  f->fileStructure.seekg(result);
-  cout << "set vars"<<endl;
-  return result;
+  return f->cursor;
 }
-
-/**
- * Mimic the read() system call (reading from an unallocated page returns zero in all bytes read from the page
- */
 
 ssize_t vdiRead(VDIFile *f, void *buf, ssize_t n){
-  /*cout << "f cursor " << f->cursor << endl;
-  ssize_t result = read(f->cursor, &buf, n);
-  cout << errno;
-  cout << "result after read " << result << endl;
-  if (result != n){
-    return -1;
-    }*/
-  //char *buffer = new char[n];
-  char buffer[100];
-  cout << "n " << n << endl;
-  //f->fileStructure.seekg(f->cursor);
-  if(!f->fileStructure.is_open()){
-    cout << "Error" << endl;
+  char tmp_buf[1000];
+  f->fileStructure.read(tmp_buf, n);
+  if(f->fileStructure){
+    buf = tmp_buf;
+    return n;
   }
-  cout<<"about to read"<<endl;
-  f->fileStructure.read(buffer, n);
-  if(!f->fileStructure){
-    cout << "Error" << endl;
+  else{
+    return f->fileStructure.gcount();
   }
-  cout << "Read " << n << endl;
-  buf = buffer;
-  return f->fileStructure.gcount();
 }
-
-
-/**
- * Mimic the write() system call (unallocated pages must be allocated before writing)
- */
-
 
 ssize_t vdiWrite(VDIFile *f, void *buf, ssize_t n){
-
+  /* f->fileStructure.write(buf, n);
+  if(f->fileStructure){
+    return n;
+  }
+  else{
+    return -1;
+  }
+  */
+  return 0;
 }
+
+
+
+
+
+
+
+  

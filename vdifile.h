@@ -8,6 +8,7 @@ using namespace std;
 struct VDIFile{
   fstream fileStructure;
   VDIHeader header;
+  int fileSize;
   int cursor;
 };
 

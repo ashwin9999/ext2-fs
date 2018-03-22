@@ -8,7 +8,7 @@ using namespace std;
 
 int main(int argc, char *argv[]){
 
-  fstream f;
+  /*fstream f;
   f.open(argv[1], ios::in | ios::out | ios::binary | ios::ate); // ate puts the cursor at the end of the file to start with
   int size = (int) f.tellg(); // Store the max size of file
   cout << "Size: " << size << endl;
@@ -50,24 +50,11 @@ int main(int argc, char *argv[]){
 
   cout << "Value at 254: " << memblock[253] << endl;
   cout << "Value at 1: " << memblock[1] << endl;
-  for(int i = ; i < 260; i++){
+  for(int i = 0; i < 260; i++){
     cout << memblock[i];
   }
   cout << endl;
-
-
-
-
-
-
-
-
-
-
-
-
-
-  /*short int magic;
+  short int magic;
   cout << "Opening: " << endl;
   VDIFile *file = vdiOpen(argv[1]);
 
@@ -88,5 +75,28 @@ int main(int argc, char *argv[]){
   cout << "magic " << hex << magic << endl;
   vdiClose(file);
   return 0;*/
+
+  
+  VDIFile *file = (VDIFile*) malloc(sizeof(VDIFile));
+  cout << "before opening the file" << endl;
+  file = vdiOpen(argv[1]);
+  off_t offset;
+  int size = file->fileSize;
+  int cursor = file->cursor;
+  cout << "size : " << size  << endl;
+  cout << file->fileStructure.tellg() << endl;
+  cout << " ----" << endl;
+  file->fileStructure.seekg(0,ios::beg);
+  cout << "cursor : " << cursor << endl;
+  offset = vdiSeek(file, 0, SEEK_SET);
+  
+  cout << "Seeked the file" << endl;
+  char buffer[1000];
+  ssize_t numChar;
+  void *buf = buffer;
+  cout << "trying to read" << endl;
+  numChar = vdiRead(file, buf, 1000);
+  cout << "Read the file" << endl;
+  cout << buffer  << endl;
   return 0;
 }
