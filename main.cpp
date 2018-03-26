@@ -83,20 +83,12 @@ int main(int argc, char *argv[]){
   off_t offset;
   int size = file->fileSize;
   int cursor = file->cursor;
-  cout << "size : " << size  << endl;
-  cout << file->fileStructure.tellg() << endl;
-  cout << " ----" << endl;
   file->fileStructure.seekg(0,ios::beg);
-  cout << "cursor : " << cursor << endl;
   offset = vdiSeek(file, 0, SEEK_SET);
-  
-  cout << "Seeked the file" << endl;
   char buffer[1000];
   ssize_t numChar;
   void *buf = buffer;
-  cout << "trying to read" << endl;
   numChar = vdiRead(file, buf, 1000);
-  cout << "Read the file" << endl;
-  cout << buffer  << endl;
+  cout << hex << buf  << endl;
   return 0;
 }

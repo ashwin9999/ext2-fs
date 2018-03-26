@@ -3,21 +3,18 @@
 using namespace std;
 
 VDIFile *vdiOpen(char *fn){
-  VDIFile file;
-  file.cursor = 0;
-  file.fileSize = 0;
-  cout << "was at open" << endl;
-  file.fileStructure.open(fn, ios::in | ios::out | ios::binary | ios::ate);
-  cout << "opened the file" << endl;
-  file.fileSize = (int) file.fileStructure.tellg();
-  file.fileStructure.seekg(0,ios::beg);
-  VDIFile *ptr = (VDIFile*) malloc(sizeof(VDIFile));
-  ptr = &file;
-  return ptr;
+  VDIFile *file = new VDIFile;
+  file->cursor = 0;
+  file->fileSize = 0;
+  file->fileStructure.open(fn, ios::in | ios::out | ios::binary | ios::ate);
+  file->fileSize = (int) file->fileStructure.tellg();
+  file->fileStructure.seekg(0,ios::beg);
+  return file;
 }
 
 void vdiClose(VDIFile *f){
   f->fileStructure.close();
+  delete f;
 }
 
 off_t vdiSeek(VDIFile *f, off_t offset, int whence){
