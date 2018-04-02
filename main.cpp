@@ -3,6 +3,7 @@
 #include <string>
 #include "vdifile.h"
 #include <fstream>
+#include "mbr.h"
 
 using namespace std;
 
@@ -24,6 +25,13 @@ int main(int argc, char *argv[]){
    int mapChar;
    unsigned int vdimap[file->header.blocksInHdd];
    mapChar = read_vdimap(file, vdimap);
+
+   int numMBR;
+   BootSector boot_sector;
+   numMBR = read_MBR(file, boot_sector);
+   if(numMBR == 1) return 1;
+
+
    
   return 0;
 }

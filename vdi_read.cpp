@@ -79,6 +79,20 @@ int read_vdimap(VDIFile *f, unsigned int vdimap[]){
   return 0;
 }
 
+int read_MBR(VDIFile *f, BootSector &boot){
+  off_t offset = lseek(f->file, f->header.offsetData, SEEK_SET);
+  if (offset < 0){
+    cout << "Error! failed to seek to MBR" << endl;
+    return 1;
+  }
+  int numMBR = read(f->file, &boot, sizeof(boot));
+  if (numMBR != sizeof(boot)){
+    cout << "Error! failed to read MBR" << endl;
+    return 1;
+  } 
+  return 0;
+}
+
 
 
 

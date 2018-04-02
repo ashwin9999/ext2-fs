@@ -1,0 +1,22 @@
+#ifndef MBR
+#define MBR
+
+
+const __u16 BOOT_SECTOR_MAGIC = 0xaa55;
+
+struct __attribute__((packed)) PartitionEntry{
+  __u8 unused_0[4];
+  __u8 type;
+  __u8 unused_1[3];
+  __u32 sector_1;
+  __u32 nSectors;
+};
+
+struct __attribute__((packed)) BootSector{
+  __u8 unused_0[0x1be];
+  PartitionEntry partitionTable[4];
+  __u16 magic;
+};
+
+
+#endif 
