@@ -2,62 +2,68 @@
 
 using namespace std;
 
-VDIFile *vdiOpen(char *fn){
-  VDIFile *file = new VDIFile;
-  file->cursor = 0;
-  file->fileSize = 0;
-  file->fileStructure.open(fn, ios::in | ios::out | ios::binary | ios::ate);
-  file->fileSize = (int) file->fileStructure.tellg();
-  file->fileStructure.seekg(0,ios::beg);
-  return file;
+int vdiOpen(VDIFile *vdi, char *fn){
+  vdi->file = open(fn, O_RDWR);
+  vdi->cursor = 0;
+  if(vdi->file < 0) return 1;
+  return vdi->file;
 }
 
 void vdiClose(VDIFile *f){
-  f->fileStructure.close();
-  delete f;
+  close(f->file);
 }
 
 off_t vdiSeek(VDIFile *f, off_t offset, int whence){
-  cout << "Before seek" << endl;
-  if(whence == SEEK_SET){
-    f->fileStructure.seekg(offset, ios::beg);
-    cout << "Inside seek" << endl;
-    f->cursor = offset;
+  off_t location;
+  if (whence == SEEK_SET){
+    location= lseek(f->file, offset, whence);
+    if(location < 0){
+      cout << "Error seeking the vdi header" << endl;
+      return 1;
+    }
+    f->cursor = location;
   }
-  if(whence == SEEK_CUR){
-    f->fileStructure.seekg(offset, ios::cur);
+  if (whence == SEEK_CUR){
+    location = lseek(f->file, offset, whence);
+    if (location < 0){
+      cout << "Error seeking the vdi header" << endl;
+      return 1;
+    }
     f->cursor += offset;
   }
   if(whence == SEEK_END){
-    f->fileStructure.seekg(offset, ios::end);
+    location = lseek(f->file, offset, whence);
+    if (location < 0){
+      cout << "Error seeking the vdi header" << endl;
+      return 1;
+    }
     f->cursor = offset + f->fileSize;
   }
   return f->cursor;
 }
 
 ssize_t vdiRead(VDIFile *f, void *buf, ssize_t n){
-  char tmp_buf[1000];
-  f->fileStructure.read(tmp_buf, n);
-  if(f->fileStructure){
-    buf = tmp_buf;
-    return n;
+  //cout << "value of buf before reading: " << buf << endl;
+  ssize_t numBytes = read(f->file, buf, n);
+  //cout << "Cursor " << f->cursor << endl;
+  if(numBytes != n) {
+    cout << "Error header not read correctly" << endl;
+    return 1;
   }
-  else{
-    return f->fileStructure.gcount();
-  }
+  return 0;
 }
 
-ssize_t vdiWrite(VDIFile *f, void *buf, ssize_t n){
-  /* f->fileStructure.write(buf, n);
+/*ssize_t vdiWrite(VDIFile *f, void *buf, ssize_t n){
+  f->fileStructure.write(buf, n);
   if(f->fileStructure){
     return n;
   }
   else{
     return -1;
   }
-  */
+  
   return 0;
-}
+  }*/
 
 
 

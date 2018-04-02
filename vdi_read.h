@@ -10,7 +10,7 @@
 #include "vdifile.h"
 using namespace std;
 
-VDIFile *vdiOpen(char *fn);
+int vdiOpen(VDIFile *vdi, char *fn);
 void vdiClose(VDIFile *f);
 off_t vdiSeek(VDIFile *f, off_t offset, int whence);
 ssize_t vdiRead(VDIFile *f, void *buf, ssize_t n);

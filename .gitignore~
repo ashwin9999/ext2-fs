@@ -1,7 +1,3 @@
 #Files to be ignored
 
-*.vdi
-hex-dump
-a.out
-output
 .DS_Store

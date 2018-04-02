@@ -1,7 +1,7 @@
 #ifndef VDIHEADER
 #define VDIHEADER
 
-struct VDIHeader{
+struct __attribute__((packed)) VDIHeader{
   unsigned int diskImage[16];
   unsigned int imageSignature;
   unsigned int version;
