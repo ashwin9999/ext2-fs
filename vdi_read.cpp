@@ -65,7 +65,19 @@ ssize_t vdiRead(VDIFile *f, void *buf, ssize_t n){
   return 0;
   }*/
 
-
+int read_vdimap(VDIFile *f, unsigned int vdimap[]){
+  off_t offset = lseek(f->file, f->header.offsetBlocks, SEEK_SET);
+  if (offset < 0) {
+    cout << "Error! failed to seek vdimap" << endl;
+    return 1;
+  }
+  int numMap = read(f->file, vdimap, 4*(f->header.blocksInHdd));
+  if (numMap < 0){
+    cout << "Error! failed to read vdimap" << endl;
+    return 1;
+  }
+  return 0;
+}
 
 
 

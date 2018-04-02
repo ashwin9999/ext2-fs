@@ -15,5 +15,6 @@ void vdiClose(VDIFile *f);
 off_t vdiSeek(VDIFile *f, off_t offset, int whence);
 ssize_t vdiRead(VDIFile *f, void *buf, ssize_t n);
 ssize_t vdiWrite(VDIFile *f, void *buf, ssize_t n);
+int read_vdimap(VDIFile *f, unsigned int vdimap[]);
 
 #endif

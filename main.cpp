@@ -19,6 +19,11 @@ int main(int argc, char *argv[]){
    offset = vdiSeek(file, 510+file->header.offsetData, SEEK_SET);
    numChar = vdiRead(file, &magic,2);
 
-   cout << "magic: " << hex << magic << endl;  
+   cout << "magic: " << hex << magic << endl;
+
+   int mapChar;
+   unsigned int vdimap[file->header.blocksInHdd];
+   mapChar = read_vdimap(file, vdimap);
+   
   return 0;
 }
