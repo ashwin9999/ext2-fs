@@ -4,6 +4,7 @@
 #include "vdifile.h"
 #include <fstream>
 #include "mbr.h"
+#include "vdiInfo.h"
 
 using namespace std;
 
@@ -16,31 +17,23 @@ int main(int argc, char *argv[]){
   short int magic;
   offset = vdiSeek(file, 0, SEEK_SET);
   numChar = vdiRead(file, &(file->header), sizeof(file->header));
-
-  // Magic number is just a checkpoint for testing. We can comment this out now, since we know it works, so we don't mess with the cursor positionings. 
-
-  /* offset = vdiSeek(file, 510+file->header.offsetData, SEEK_SET);
-   numChar = vdiRead(file, &magic,2);
-
-   cout << "magic: " << hex << magic << endl;*/
-
+  display_vdihead(file);
+  
    int mapChar;
    unsigned int vdimap[file->header.blocksInHdd];
    mapChar = read_vdimap(file, vdimap);
+   display_vdimap(vdimap);
 
    int numMBR;
    BootSector boot_sector;
    numMBR = read_MBR(file, boot_sector);
    if(numMBR == 1) return 1;
+   display_MBR(boot_sector);
 
    ext2_super_block super_block;
    int numSuperBlock;
    numSuperBlock = read_superblock(file, boot_sector, vdimap, super_block);
    if(numSuperBlock == 1) return 1;
-
-   cout << "s_magic: " << hex << super_block.s_magic << endl;
-
-
-   
+   display_superblock(super_block);   
   return 0;
 }
