@@ -73,3 +73,13 @@ void display_superblock(ext2_super_block super){
   cout<<"Default gid for reserved blocks: "<<super.s_def_resgid<<endl;
   cout << "===============================" << endl;
 }
+
+void display_inode(ext2_inode inode){
+
+  cout << "Inode information" << endl;
+  cout << "====================" << endl;
+  cout << "i_size: " << dec << inode.size << endl;
+  cout << "i_mode: " << oct << inode.mode << endl;
+  cout << "uid: " << dec << inode.uid << endl;
+  cout << "====================" << endl;
+}

@@ -11,6 +11,7 @@
 #include "mbr.h"
 #include "superblock.h"
 #include "group_descriptor.h"
+#include "inode.h"
 
 using namespace std;
 
@@ -23,7 +24,10 @@ int read_vdimap(VDIFile *f, unsigned int vdimap[]);
 int read_MBR(VDIFile *f, BootSector &boot);
 int read_superblock(VDIFile *f, BootSector &boot, unsigned int vdimap[], ext2_super_block &super);
 unsigned int translate(unsigned int location, VDIFile *f, BootSector boot_sector, unsigned int vdimap[]);
-int read_group_descriptor(VDIFile *f, BootSector boot_sector, unsigned int vdimap[], unsigned int block_size, ext2_group_descriptor group_descriptor[], unsigned int block_group_count);
+int read_group_descriptor(VDIFile *f, BootSector boot_sector, unsigned int vdimap[], unsigned int block_size,ext2_group_descriptor group_descriptor[], unsigned int block_group_count);
+unsigned char* read_bitmap(unsigned int block_size, unsigned int block_id, VDIFile *f, BootSector boot_sector, unsigned int vdimap[]);
+ext2_inode read_inode(VDIFile *f, BootSector boot_sector, unsigned int vdimap[], unsigned int inode_count, unsigned int block_size, ext2_super_block super_block, ext2_group_descriptor group_descriptor[]);
+
 
 
 #endif

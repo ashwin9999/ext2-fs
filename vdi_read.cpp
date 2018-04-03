@@ -139,6 +139,32 @@ int read_group_descriptor(VDIFile *f, BootSector boot_sector, unsigned int vdima
   
 }
 
+unsigned char* read_bitmap(unsigned int block_size, unsigned int block_id, VDIFile *f, BootSector boot_sector, unsigned int vdimap[]) {
+
+  unsigned char *bitmap;
+  bitmap = (unsigned char *)malloc(block_size);
+  lseek(f->file, translate(block_id*block_size, f, boot_sector, vdimap), SEEK_SET);
+  read(f->file, bitmap, block_size);
+  return bitmap;
+}
+
+ext2_inode read_inode(VDIFile *f, BootSector boot_sector, unsigned int vdimap[], unsigned int inode_count, unsigned int block_size, ext2_super_block super_block, ext2_group_descriptor group_descriptor[]){
+
+  ext2_inode inode;
+  inode_count--;
+
+  unsigned int group_count = inode_count/super_block.s_inodes_per_group;
+  unsigned int offset1 = inode_count % super_block.s_inodes_per_group;
+  unsigned int inodes_per_block = block_size/sizeof(ext2_inode);
+  unsigned int block_num = group_descriptor[group_count].inode_table + (offset1/inodes_per_block);
+  unsigned int offset2 = inode_count % inodes_per_block;
+
+  lseek(f->file, translate((block_num*block_size) + offset2*sizeof(ext2_inode), f, boot_sector, vdimap), SEEK_SET);
+  read(f->file, &inode, sizeof(ext2_inode));
+
+  return inode;
+}
+
 
 
   

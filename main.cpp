@@ -44,7 +44,9 @@ int main(int argc, char *argv[]){
    ext2_group_descriptor group_descriptor[group_count];
    if (read_group_descriptor(file, boot_sector, vdimap, block_size, group_descriptor, group_count) == 1) return 1;
 
-
+   
+   ext2_inode inode = read_inode(file, boot_sector, vdimap, 2, block_size, super_block, group_descriptor);
+   display_inode(inode);
    
   return 0;
 }
