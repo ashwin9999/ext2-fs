@@ -10,6 +10,8 @@
 #include "vdifile.h"
 #include "mbr.h"
 #include "superblock.h"
+#include "group_descriptor.h"
+
 using namespace std;
 
 int vdiOpen(VDIFile *vdi, char *fn);
@@ -21,5 +23,7 @@ int read_vdimap(VDIFile *f, unsigned int vdimap[]);
 int read_MBR(VDIFile *f, BootSector &boot);
 int read_superblock(VDIFile *f, BootSector &boot, unsigned int vdimap[], ext2_super_block &super);
 unsigned int translate(unsigned int location, VDIFile *f, BootSector boot_sector, unsigned int vdimap[]);
+int read_group_descriptor(VDIFile *f, BootSector boot_sector, unsigned int vdimap[], unsigned int block_size, ext2_group_descriptor group_descriptor[], unsigned int block_group_count);
+
 
 #endif

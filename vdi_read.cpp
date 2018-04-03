@@ -119,6 +119,25 @@ unsigned int translate(unsigned int location, VDIFile *f, BootSector boot_sector
   return value;
 }
 
+int read_group_descriptor(VDIFile *f, BootSector boot_sector, unsigned int vdimap[], unsigned int block_size, ext2_group_descriptor group_descriptor[], unsigned int block_group_count){
+
+  unsigned int start = 0;
+  if (block_size == 1024) start = 2*block_size;
+  else start = 1*block_size;
+
+  unsigned int location = translate(start, f, boot_sector, vdimap);
+  if (lseek(f->file, location, SEEK_SET) < 0) {
+    cout << "Error! Cannot seek to group descriptor table!" << endl;
+    return 1;
+  }
+  if (read(f->file, group_descriptor, sizeof(ext2_group_descriptor)*block_group_count) != sizeof(ext2_group_descriptor)*block_group_count) {
+    cout << "Error! Cannot read group descriptor!" << endl;
+    return 1;
+  }
+
+  return 0;
+  
+}
 
 
 

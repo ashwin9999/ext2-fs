@@ -34,6 +34,17 @@ int main(int argc, char *argv[]){
    int numSuperBlock;
    numSuperBlock = read_superblock(file, boot_sector, vdimap, super_block);
    if(numSuperBlock == 1) return 1;
-   display_superblock(super_block);   
+   display_superblock(super_block);
+
+   unsigned int group_count = (super_block.s_blocks_count- super_block.s_first_data_block) / super_block.s_blocks_per_group;
+   unsigned int remainder = (super_block.s_blocks_count - super_block.s_first_data_block) % super_block.s_blocks_per_group;
+   if (remainder > 0) group_count++;
+
+   unsigned int block_size = 1024 << super_block.s_log_block_size;
+   ext2_group_descriptor group_descriptor[group_count];
+   if (read_group_descriptor(file, boot_sector, vdimap, block_size, group_descriptor, group_count) == 1) return 1;
+
+
+   
   return 0;
 }
