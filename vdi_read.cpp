@@ -93,6 +93,31 @@ int read_MBR(VDIFile *f, BootSector &boot){
   return 0;
 }
 
+int read_superblock(VDIFile *f, BootSector &boot, unsigned int vdimap[], ext2_super_block &super){
+  unsigned int super_block_location = translate(1024, f, boot, vdimap);
+  if (lseek(f->file, super_block_location, SEEK_SET) < 0){
+    cout << "Error! failed to seek to the superblock!" << endl;
+    return 1;
+  }
+  if (read(f->file, &super, sizeof(super)) != 1024){
+    cout << "Error! failed to read superblock correctly!" << endl;
+    return 1;
+
+  }
+  return 0;
+}
+
+unsigned int translate(unsigned int location, VDIFile *f, BootSector boot_sector, unsigned int vdimap[]){
+
+  unsigned int part1 = f->header.offsetData;
+  unsigned int part2 = boot_sector.partitionTable[0].sector_1*512 + location;
+  unsigned int offset = part2%f->header.blockSize;
+  unsigned int block = part2/f->header.blockSize;
+  unsigned int translation = vdimap[block];
+  unsigned int value = part1+translation*f->header.blockSize + offset;
+
+  return value;
+}
 
 
 

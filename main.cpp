@@ -17,10 +17,12 @@ int main(int argc, char *argv[]){
   offset = vdiSeek(file, 0, SEEK_SET);
   numChar = vdiRead(file, &(file->header), sizeof(file->header));
 
-   offset = vdiSeek(file, 510+file->header.offsetData, SEEK_SET);
+  // Magic number is just a checkpoint for testing. We can comment this out now, since we know it works, so we don't mess with the cursor positionings. 
+
+  /* offset = vdiSeek(file, 510+file->header.offsetData, SEEK_SET);
    numChar = vdiRead(file, &magic,2);
 
-   cout << "magic: " << hex << magic << endl;
+   cout << "magic: " << hex << magic << endl;*/
 
    int mapChar;
    unsigned int vdimap[file->header.blocksInHdd];
@@ -30,6 +32,11 @@ int main(int argc, char *argv[]){
    BootSector boot_sector;
    numMBR = read_MBR(file, boot_sector);
    if(numMBR == 1) return 1;
+
+   ext2_super_block super_block;
+   int numSuperBlock;
+   numSuperBlock = read_superblock(file, boot_sector, vdimap, super_block);
+   if(numSuperBlock == 1) return 1;
 
 
    
