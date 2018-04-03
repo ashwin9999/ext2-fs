@@ -38,6 +38,8 @@ int main(int argc, char *argv[]){
    numSuperBlock = read_superblock(file, boot_sector, vdimap, super_block);
    if(numSuperBlock == 1) return 1;
 
+   cout << "s_magic: " << hex << super_block.s_magic << endl;
+
 
    
   return 0;
