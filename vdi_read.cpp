@@ -165,6 +165,35 @@ ext2_inode read_inode(VDIFile *f, BootSector boot_sector, unsigned int vdimap[],
   return inode;
 }
 
+bool get_dir_entry(ext2_dir_entry_2 &found, unsigned char *data_block, unsigned int size_diff, string fname, bool display) {
 
+  ext2_dir_entry_2 *entry = (ext2_dir_entry_2 *) malloc (sizeof(ext2_dir_entry_2));
+  memcpy(entry, data_block, sizeof(*entry));
+  unsigned int entry_number = 0;
+  unsigned int size = 0;
+
+  while (size < size_diff) {
+    char f_name[256];
+    memcpy(f_name, entry->name, entry->name_len);
+    f_name[entry->name_len] = '\0';
+    if (entry->inode != 0) {
+      if (display) cout << f_name << endl;
+      else if ((string) f_name == fname) {
+	found = *entry;
+	free(entry);
+	return true;
+      }
+    }
+    else {
+      size += sizeof(*entry);
+      memcpy(entry, data_block + size, sizeof(*entry));
+      continue;
+    }
+    size += entry->rec_len;
+    memcpy(entry, data_block + size, sizeof(*entry));
+  }
+  free(entry);
+  return false;
+}
 
   

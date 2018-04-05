@@ -12,6 +12,7 @@
 #include "superblock.h"
 #include "group_descriptor.h"
 #include "inode.h"
+#include "dir.h"
 
 using namespace std;
 
@@ -27,6 +28,7 @@ unsigned int translate(unsigned int location, VDIFile *f, BootSector boot_sector
 int read_group_descriptor(VDIFile *f, BootSector boot_sector, unsigned int vdimap[], unsigned int block_size,ext2_group_descriptor group_descriptor[], unsigned int block_group_count);
 unsigned char* read_bitmap(unsigned int block_size, unsigned int block_id, VDIFile *f, BootSector boot_sector, unsigned int vdimap[]);
 ext2_inode read_inode(VDIFile *f, BootSector boot_sector, unsigned int vdimap[], unsigned int inode_count, unsigned int block_size, ext2_super_block super_block, ext2_group_descriptor group_descriptor[]);
+bool get_dir_entry(ext2_dir_entry_2 &found, unsigned char *data_block, unsigned int size_diff, string fname, bool display);
 
 
 
