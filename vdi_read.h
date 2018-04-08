@@ -29,6 +29,8 @@ int read_group_descriptor(VDIFile *f, BootSector boot_sector, unsigned int vdima
 unsigned char* read_bitmap(unsigned int block_size, unsigned int block_id, VDIFile *f, BootSector boot_sector, unsigned int vdimap[]);
 ext2_inode read_inode(VDIFile *f, BootSector boot_sector, unsigned int vdimap[], unsigned int inode_count, unsigned int block_size, ext2_super_block super_block, ext2_group_descriptor group_descriptor[]);
 bool get_dir_entry(ext2_dir_entry_2 &found, unsigned char *data_block, unsigned int size_diff, string fname, bool display);
+int read_block(ext2_inode inode, unsigned int block_num, unsigned int block_size, VDIFile * f, BootSector boot_sector, unsigned int vdimap[], unsigned char *buf);
+void compute_index(unsigned int block_num, unsigned int block_size, int &direct_number, int &indirect_index, int &index_2, int& index_3);
 
 
 

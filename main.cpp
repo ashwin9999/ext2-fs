@@ -3,6 +3,7 @@
 #include <string>
 #include "vdifile.h"
 #include <fstream>
+#include <stack>
 #include "mbr.h"
 #include "vdiInfo.h"
 
@@ -47,6 +48,79 @@ int main(int argc, char *argv[]){
    
    ext2_inode inode = read_inode(file, boot_sector, vdimap, 2, block_size, super_block, group_descriptor);
    display_inode(inode);
+
+   /*
+    * Fetching directories from the inode
+    */
+
+   //display_file_system();
+   
+   string path = "Path: /";
+   unsigned char *buf = (unsigned char*) malloc(block_size);
+   ext2_dir_entry_2 current;
+   bool found = false;
+
+   unsigned int root_size = inode.size/block_size;
+   if(inode.size%block_size > 0) root_size++;
+
+   for(int i =0; i < root_size; i++){
+     int difference;
+     difference = read_block(inode, i, block_size, file, boot_sector, vdimap, buf);
+     if (difference == -1) {
+       cout << "Error in displaying the file system!" << endl;
+       return 1;
+     }
+     if (get_dir_entry(current, buf, difference, ".", false)){
+       found = true;
+       break;
+     }
+   }
+
+   if (!found){
+     cout << "Error in displaying the file system!" << endl;
+     return 1;
+   }
+
+   cout << path << endl;
+
+   stack<int> *dirname_length = new stack<int>;
+   bool cont = true;
+   string answer;
+
+   while(cont){
+     getline(cin, answer);
+     if (answer == "ls"){
+       cout << endl;
+       ext2_inode new_inode = read_inode(file, boot_sector, vdimap, current.inode, block_size, super_block, group_descriptor);
+
+       unsigned int file_size = inode.size/block_size;
+       if (inode.size % block_size > 0) file_size++;
+
+       for (int i = 0; i < file_size; i++){
+	 int diff;
+	 diff = read_block(new_inode, i, block_size, file, boot_sector, vdimap, buf);
+	 if (diff == -1) {
+	   cout << "Error displaying the file!" << endl;
+	   return 1;
+	 }
+	 get_dir_entry(current, buf, diff, "", true);
+
+       }
+
+
+
+     }
+
+     close(file->file);
+     free(buf);
+
+   }
+   
+   
+
+
+
+   
    
   return 0;
 }

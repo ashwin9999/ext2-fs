@@ -196,4 +196,122 @@ bool get_dir_entry(ext2_dir_entry_2 &found, unsigned char *data_block, unsigned 
   return false;
 }
 
+int read_block(ext2_inode inode, unsigned int block_num, unsigned int block_size, VDIFile * f, BootSector boot_sector, unsigned int vdimap[], unsigned char *buf){
+
+  if (block_num*block_size >= inode.size) return -1;
+  int direct, index_1, index_2, index_3;
+
+  compute_index(block_num, block_size, direct, index_1, index_2, index_3);
+  unsigned int direct_block_num = 0;
+  unsigned int block_num_1 = 0;
+  unsigned int block_num_2 = 0;
+  unsigned int block_num_3 = inode.i_block[14];
+  bool hole = false;
+
+  if (index_3 != -1){
+    if (block_num_3 == 0) hole = true;
+    else {
+      if (index_1 != -1 && index_2 != -1 && direct == -1){
+	if (lseek(f->file, translate(block_num_3*block_size, f, boot_sector, vdimap), SEEK_SET) < 0) return -1;
+	if (read(f->file, buf, block_size) < 0) return -1;
+	if (index_3 >= (block_size/4)) return -1;
+	block_num_2 = *(((unsigned int *) buf) + index_2);
+      }
+      else return -1;
+    }
+  }
+
+  if (!hole && index_2 != -1){
+    if (index_1 != -1 && direct == -1) {
+      if (index_3 == -1) block_num_2 = inode.i_block[13];
+
+      if (block_num_2 == 0) hole = true;
+
+      else{
+	if (lseek(f->file, translate(block_num_2*block_size, f, boot_sector, vdimap), SEEK_SET) < 0) return -1;
+	if (read(f->file, buf, block_size) < 0) return -1;
+	if (index_2 >= (block_size/4)) return -1;
+	block_num_1 = *(((unsigned int *) buf) + index_2);
+      }
+    }
+    else return -1;
+    
+  }
+
+  if (!hole && index_1 != -1) {
+    if (direct == -1) {
+      if (index_2 == -1) block_num_1 = inode.i_block[12];
+
+      if (block_num_1 == 0) hole = true;
+
+      else{
+	if (lseek(f->file, translate(block_num_1*block_size, f, boot_sector, vdimap), SEEK_SET) < 0) return -1;
+
+	if (read(f->file, buf, block_size) < 0) return -1;
+
+	if (index_1 >= (block_size/4))return -1;
+
+	direct_block_num = *(((unsigned int *) buf) + index_1);
+      }
+      
+    } else return -1;
+
+  }
+
+  if (!hole && direct != -1) {
+    if (direct < 12) direct_block_num = inode.i_block[direct];
+    else return -1;
+  }
+
+  if (hole) memset(buf, 0, block_size);
+  else{
+    if (lseek(f->file, translate(direct_block_num*block_size, f, boot_sector, vdimap), SEEK_SET) < 0) return -1;
+
+    if (read(f->file, buf, block_size) < 0) return -1;
+   
+  }
+
+  unsigned int difference = inode.size - (block_num*block_size);
+  if (difference >= block_size) return block_size;
+  return difference;
+}
+
+void compute_index(unsigned int block_num, unsigned int block_size, int &direct_number, int &indirect_index, int &index_2, int& index_3){
+
+  if (block_num <= 11){
+    direct_number = block_num;
+    indirect_index = -1;
+    index_2 = -1;
+    index_3 = -1;
+    return;
+  }
+  unsigned int blocks_rem = block_num - 12;
+
+  if (blocks_rem < block_size/4) {
+    direct_number = -1;
+    index_2 = -1;
+    index_3 = -1;
+    indirect_index = blocks_rem;
+    return;
+  }
+  blocks_rem -= block_size/4;
+
+  if (blocks_rem < (block_size/4)*(block_size/4)){
+    direct_number = -1;
+    index_3 = -1;
+    index_2 = blocks_rem/(block_size/4);
+    indirect_index = blocks_rem - (index_2)*(block_size/4);
+    return;
+  }
+  blocks_rem -= (block_size/4)*(block_size/4);
+
+  if (blocks_rem < (block_size/4)*(block_size/4)*(block_size/4)){
+    direct_number = -1;
+    index_3 = blocks_rem/((block_size/4)*(block_size/4));
+    index_2 = (blocks_rem - (index_3)*(block_size/4)*(block_size/4))/(block_size/4);
+    indirect_index = (blocks_rem - (index_3)*(block_size/4)*(block_size/4)) - (index_2)*(block_size/4);
+    return;
+  }
+}
+
   
