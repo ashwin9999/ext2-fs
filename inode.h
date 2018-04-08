@@ -2,8 +2,8 @@
 #define INODE
 
 struct __attribute__((packed)) ext2_inode{
-  unsigned int mode;
-  unsigned int uid;
+  unsigned short mode;
+  unsigned short uid;
   unsigned int size;
   unsigned int atime;
   unsigned int ctime;

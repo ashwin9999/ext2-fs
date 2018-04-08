@@ -18,36 +18,41 @@ int main(int argc, char *argv[]){
   short int magic;
   offset = vdiSeek(file, 0, SEEK_SET);
   numChar = vdiRead(file, &(file->header), sizeof(file->header));
-  display_vdihead(file);
+  //display_vdihead(file);
   
    int mapChar;
    unsigned int vdimap[file->header.blocksInHdd];
    mapChar = read_vdimap(file, vdimap);
-   display_vdimap(vdimap);
+   //display_vdimap(vdimap);
 
    int numMBR;
    BootSector boot_sector;
    numMBR = read_MBR(file, boot_sector);
    if(numMBR == 1) return 1;
-   display_MBR(boot_sector);
+   //display_MBR(boot_sector);
 
    ext2_super_block super_block;
    int numSuperBlock;
    numSuperBlock = read_superblock(file, boot_sector, vdimap, super_block);
    if(numSuperBlock == 1) return 1;
-   display_superblock(super_block);
+   //display_superblock(super_block);
 
-   unsigned int group_count = (super_block.s_blocks_count- super_block.s_first_data_block) / super_block.s_blocks_per_group;
+   unsigned int group_count = (super_block.s_blocks_count- super_block.s_first_data_block) / super_block.s_blocks_per_group;   
    unsigned int remainder = (super_block.s_blocks_count - super_block.s_first_data_block) % super_block.s_blocks_per_group;
    if (remainder > 0) group_count++;
-
    unsigned int block_size = 1024 << super_block.s_log_block_size;
    ext2_group_descriptor group_descriptor[group_count];
    if (read_group_descriptor(file, boot_sector, vdimap, block_size, group_descriptor, group_count) == 1) return 1;
-
+   //display_group_descriptor(group_descriptor, group_count);
    
+   /***  All good until here **/
+
+
    ext2_inode inode = read_inode(file, boot_sector, vdimap, 2, block_size, super_block, group_descriptor);
-   display_inode(inode);
+ 
+   //cout << "inode-size "  << inode.size << endl;
+   //display_inode(inode);
+
 
    /*
     * Fetching directories from the inode
@@ -67,7 +72,7 @@ int main(int argc, char *argv[]){
      int difference;
      difference = read_block(inode, i, block_size, file, boot_sector, vdimap, buf);
      if (difference == -1) {
-       cout << "Error in displaying the file system!" << endl;
+       cout << "Error in displaying the file system! - 1" << endl;
        return 1;
      }
      if (get_dir_entry(current, buf, difference, ".", false)){
@@ -77,7 +82,7 @@ int main(int argc, char *argv[]){
    }
 
    if (!found){
-     cout << "Error in displaying the file system!" << endl;
+     cout << "Error in displaying the file system! - 2" << endl;
      return 1;
    }
 
@@ -99,6 +104,7 @@ int main(int argc, char *argv[]){
        for (int i = 0; i < file_size; i++){
 	 int diff;
 	 diff = read_block(new_inode, i, block_size, file, boot_sector, vdimap, buf);
+
 	 if (diff == -1) {
 	   cout << "Error displaying the file!" << endl;
 	   return 1;
