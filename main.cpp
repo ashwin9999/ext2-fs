@@ -110,23 +110,10 @@ int main(int argc, char *argv[]){
 	   return 1;
 	 }
 	 get_dir_entry(current, buf, diff, "", true);
-
        }
-
-
-
      }
-
      close(file->file);
      free(buf);
-
    }
-   
-   
-
-
-
-   
-   
   return 0;
 }
