@@ -87,6 +87,7 @@ int main(int argc, char *argv[]){
    }
 
    cout << path << endl;
+   cout << "Run ls to view the list of files" << endl;
 
    stack<int> *dirname_length = new stack<int>;
    bool cont = true;
@@ -112,6 +113,43 @@ int main(int argc, char *argv[]){
 	 get_dir_entry(current, buf, diff, "", true);
        }
      }
+     else if  (answer.compare(0,3,"cd ") == 0) {
+       cout << endl;
+       ext2_inode new_inode_2 = read_inode(file, boot_sector, vdimap, current.inode, block_size, super_block, group_descriptor);
+       string dir = answer.substr(3, answer.length()-1);
+       char fname[256];
+       memcpy(fname, current.name, current.name_len);
+       if ((string)fname != "..") dirname_length->push((int) current.name_len);
+
+       ext2_dir_entry_2 new_dir;
+       unsigned int f_size = new_inode_2.size/block_size;
+       if (new_inode_2.size%block_size > 0) f_size++;
+       found = false;
+       for (int i = 0; i < f_size; i++){
+	 int difference;
+	 difference = read_block(new_inode_2, i, block_size, file, boot_sector, vdimap, buf);
+	 if (difference == -1) {
+	   cout << "Error displaying the file system! - 3" << endl;
+	   return 1;
+	 }
+	 if (get_dir_entry(new_dir, buf, difference, dir, false)){
+	   found = true;
+	   break;
+	 }
+
+       }
+
+       if (!found) cout << "The directory cannot be located!" << endl;
+       else {
+	 if ((int) new_dir.file_type == 2) {
+	   current = new_dir;
+	   path += dir + "/";
+	 }
+	 else cout << "The name you entered is not a directory file!" << endl;
+       }
+
+     }
+     cout << path << endl;
      close(file->file);
      free(buf);
    }
