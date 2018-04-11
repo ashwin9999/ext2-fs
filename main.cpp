@@ -87,7 +87,8 @@ int main(int argc, char *argv[]){
    }
 
    cout << path << endl;
-   cout << "Run ls to view the list of files" << endl;
+   cout << "Enter ls to view the list of files" << endl;
+   cout << "==================================" << endl;
 
    stack<int> *dirname_length = new stack<int>;
    bool cont = true;
@@ -95,7 +96,44 @@ int main(int argc, char *argv[]){
 
    while(cont){
      getline(cin, answer);
-     if (answer == "ls"){
+     if (answer == "cd .."){
+       cout << endl;
+
+       if (current.inode != 2){
+	 ext2_inode inode = read_inode(file, boot_sector, vdimap, current.inode, block_size, super_block, group_descriptor);
+	 char fname[256];
+	 memcpy(fname, current.name, current.name_len);
+	 fname[current.name_len] = '\0';
+	 if ((string) fname != "..") dirname_length->push((int)current.name_len);
+
+	 unsigned int f_size = inode.size/block_size;
+	 if (inode.size%block_size > 0) f_size++;
+
+	 found = false;
+	 for (int i =0; i < f_size; i++){
+	   int difference;
+	   difference = read_block(inode, i, block_size, file, boot_sector, vdimap, buf);
+	   if (difference == -1){
+	     cout << "Error in displaying file system! -cd .." << endl;
+	     return 1;
+	   }
+	   if (get_dir_entry(current, buf, difference, "..", false)){
+	     found = true;
+	     break;
+	   }
+	 }
+
+	   if (!found) cout << "The directory couldnt be located cd .." << endl;
+	   else{
+	     path = path.substr(0,path.length()-dirname_length->top()-1);
+	     dirname_length->pop();
+	   }
+	 } else cout << "You are at the root!" << endl;
+	 
+       cout << path << endl;
+
+     }
+     else if (answer == "ls"){
        cout << endl;
        ext2_inode new_inode = read_inode(file, boot_sector, vdimap, current.inode, block_size, super_block, group_descriptor);
 
@@ -149,6 +187,7 @@ int main(int argc, char *argv[]){
        }
 
      }
+     cout << "==================================" << endl;
      cout << path << endl;
      close(file->file);
      free(buf);
