@@ -4,6 +4,8 @@
 #include "vdifile.h"
 #include <fstream>
 #include <stack>
+#include <sstream>
+#include <vector>
 #include "mbr.h"
 #include "vdiInfo.h"
 
@@ -194,6 +196,92 @@ int main(int argc, char *argv[]){
        }
 
      }
+
+     if (answer.compare(0,4,"read") == 0){
+       cout << endl;
+       stringstream ss(answer);
+       vector<string> elements; 
+       string item;
+       while(getline(ss, item, ' ')) elements.push_back(item);
+       vector<string> split1 = elements;
+       if (split1.size() < 3) {
+	 cout << "Error, there are fewer arguments than required!" << endl;
+	 continue;
+       }
+       string ext2path = split1[1];
+       string hostpath = split1[2];
+
+       stringstream ss2(ext2path);
+       vector<string> elements2;
+       string item2;
+       while(getline(ss2, item2, '/')) elements2.push_back(item2);
+       vector<string> split2 = elements2;
+
+       ext2_inode current_inode = read_inode(file, boot_sector, vdimap, current.inode, block_size, super_block, group_descriptor);
+       ext2_dir_entry_2 curr_dir;
+
+       if(split2.size() < 2){
+	 cout << "The path for ext2 is not in a correct format!" << endl;
+	 continue;
+       }
+       found = false;
+       for (int j= 1; j < split2.size(); j++) {
+	 unsigned int fsize = current_inode.size/block_size;
+	 if (current_inode.size % block_size > 0) fsize++;
+	 for (int i = 0; i < fsize; i++){
+	   int difference;
+	   difference = read_block(current_inode, i, block_size, file, boot_sector, vdimap,  buf);
+	   if (difference == -1) {
+	     cout << "Error in parsing the path for directory!" << endl;
+	     return 1;
+	   }
+	   if (get_dir_entry(curr_dir, buf, difference, split2[j], false)){
+	     found = true;
+	     break;
+	   } 
+	 }
+	 
+	 if (!found) {
+	   cout << "Cannot find the directory entry in ext2path" << endl;
+	   return 1;
+	 }
+	 else{
+	   current_inode = read_inode(file, boot_sector, vdimap, curr_dir.inode, block_size, super_block, group_descriptor);
+	 }
+
+       }
+       
+       
+       if (hostpath.empty()){
+	 cout << "Error, please enter a host path" << endl;
+	 continue;
+       }
+
+       int fd = open(hostpath.c_str(), O_CREAT | O_WRONLY | O_APPEND, S_IRWXU);
+       if (fd < 0) {
+	 cout << "The file cannot be created in the host path" << endl;
+	 continue;
+       }
+       if ((int) curr_dir.file_type != 1) {
+	 cout << "The file in the ext2path cannot be read" << endl;
+	 continue;
+       }
+       unsigned int file_size = current_inode.size/block_size;
+       if(current_inode.size % block_size > 0) file_size++;
+
+       for (int i = 0; i < file_size; i++){
+	 int difference = read_block(current_inode, i, block_size,file,boot_sector, vdimap, buf);
+	 if (difference == -1) {
+	   cout << "Error in parsing the path of the directory! " << endl;
+	   return 1;
+	 }
+	 if(i+1 == file_size) write(fd, buf, difference);
+	 else write(fd, buf, block_size);
+       }
+       cout << "File " + ext2path + " has been read correctly to " + hostpath + "." << endl;
+       close(fd);
+     }
+
      cout << "==================================" << endl;
      cout << path << endl;
      //close(file->file);
