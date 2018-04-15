@@ -89,7 +89,7 @@ int read_MBR(VDIFile *f, BootSector &boot){
   if (numMBR != sizeof(boot)){
     cout << "Error! failed to read MBR" << endl;
     return 1;
-  } 
+  }
   return 0;
 }
 

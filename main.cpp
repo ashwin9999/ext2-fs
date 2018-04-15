@@ -96,6 +96,13 @@ int main(int argc, char *argv[]){
 
    while(cont){
      getline(cin, answer);
+     if (answer == "help"){
+       cout << endl;
+       cout << "To change a directory -- cd [dirname]" << endl;
+       cout << "To move one directory up -- cd .." << endl;
+       cout << "To display files within the current directory -- ls" <<endl;
+       cout << endl;
+     }
      if (answer == "cd .."){
        cout << endl;
 
@@ -133,7 +140,7 @@ int main(int argc, char *argv[]){
        cout << path << endl;
 
      }
-     else if (answer == "ls"){
+     if (answer == "ls"){
        cout << endl;
        ext2_inode new_inode = read_inode(file, boot_sector, vdimap, current.inode, block_size, super_block, group_descriptor);
 
@@ -151,7 +158,7 @@ int main(int argc, char *argv[]){
 	 get_dir_entry(current, buf, diff, "", true);
        }
      }
-     else if  (answer.compare(0,3,"cd ") == 0) {
+     if  (answer.compare(0,3,"cd ") == 0) {
        cout << endl;
        ext2_inode new_inode_2 = read_inode(file, boot_sector, vdimap, current.inode, block_size, super_block, group_descriptor);
        string dir = answer.substr(3, answer.length()-1);
@@ -189,8 +196,8 @@ int main(int argc, char *argv[]){
      }
      cout << "==================================" << endl;
      cout << path << endl;
-     close(file->file);
-     free(buf);
+     //close(file->file);
+     //free(buf);
    }
   return 0;
 }
