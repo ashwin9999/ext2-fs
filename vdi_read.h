@@ -32,6 +32,4 @@ bool get_dir_entry(ext2_dir_entry_2 &found, unsigned char *data_block, unsigned 
 int read_block(ext2_inode inode, unsigned int block_num, unsigned int block_size, VDIFile * f, BootSector boot_sector, unsigned int vdimap[], unsigned char *buf);
 void compute_index(unsigned int block_num, unsigned int block_size, int &direct_number, int &indirect_index, int &index_2, int& index_3);
 
-
-
 #endif

@@ -74,19 +74,16 @@ void display_superblock(ext2_super_block super){
   cout << "===============================" << endl;
 }
 
-
-
 void display_group_descriptor(ext2_group_descriptor group[], unsigned int count){
   cout << "Group descriptor table" <<endl;
+  cout << "======================" << endl;
   for (int i=0; i <count; i++){
     cout << "Block bitmap: " << group[i].block_bitmap << endl;
     cout << "Inode bitmap: " << group[i].inode_bitmap << endl;
     cout << "Inode table: " << group[i].inode_table << endl;
   }
+  cout << "======================" << endl;
   cout << endl;
-
-
-
 }
 
 void display_inode(ext2_inode inode){

@@ -28,7 +28,6 @@ struct __attribute__((packed)) ext2_super_block {
   unsigned short s_def_resuid;
   unsigned short s_def_resgid;
   
-
   unsigned int s_first_ino;
   unsigned short s_inode_size;
   unsigned short s_block_group_nr;

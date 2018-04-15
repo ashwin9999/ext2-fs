@@ -8,7 +8,7 @@ struct __attribute__((packed)) PartitionEntry{
    unsigned char type;
    unsigned char unused_1[3];
    unsigned int sector_1;
-   unsigned int  nSectors;
+   unsigned int nSectors;
 };
 
 struct __attribute__((packed)) BootSector{
