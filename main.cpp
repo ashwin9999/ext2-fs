@@ -8,6 +8,7 @@
 #include <vector>
 #include "mbr.h"
 #include "vdiInfo.h"
+#include "vdi_write.h"
 
 using namespace std;
 
