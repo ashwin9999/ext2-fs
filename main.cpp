@@ -328,6 +328,7 @@ int main(int argc, char *argv[]){
 	 cout << "Error in setting the current dir to the root dir" << endl;
 	 return -1;
        }
+       
        found = false;
        for (int j = 1; j < split2.size() - 1; j++){
 	 unsigned int size = current_inode.size/block_size;
@@ -339,11 +340,16 @@ int main(int argc, char *argv[]){
 	     cout << "Error in parsing the dir path" << endl;
 	     return 1;
 	   }
+	   cout << "Split value: " << split2[j] << endl;
+	   cout << "Difference: " << difference  << endl;
+	   cout << "Current dir inode: " << current_dir.inode << endl;
 	   if (get_dir_entry(current_dir, buf, difference, split2[j], false)) {
 	     found = true;
 	     break;
 	   }
 	 }
+
+	 // cout << "difference: " << difference << endl;
 	 
 	 /* This is where it is breaking*/
 
@@ -352,6 +358,7 @@ int main(int argc, char *argv[]){
 	   cout << "Cannot locate the dir entry in ext2path" << endl;
 	   return 1;
 	 } else current_inode = read_inode(file, boot_sector, vdimap, current_dir.inode, block_size, super_block, group_descriptor);
+       }
 
 	 string name = split2[split2.size() - 1];
 	 unsigned int new_dir_rec_len = 8 + name.length() + 1;
@@ -572,10 +579,9 @@ int main(int argc, char *argv[]){
 
 	 cout << "File " + hostpath + " successfully written into the ext2 file system at " + ext2path + "." << endl;
        }
-     }
-     }
      cout << "==================================" << endl;
      cout << path << endl;
+   }
      //close(file->file);
      //free(buf);
      
