@@ -178,8 +178,8 @@ ext2_inode read_inode(VDIFile *f, BootSector boot_sector, unsigned int vdimap[],
   unsigned int inodes_per_block = block_size/sizeof(ext2_inode);
   unsigned int block_num = group_descriptor[group_count].inode_table + (offset1/inodes_per_block);
   unsigned int offset2 = inode_count % inodes_per_block;
-  lseek(f->file, translate((block_num*block_size) + offset2*128, f, boot_sector, vdimap), SEEK_SET);
-  read(f->file, &inode, 128);
+  lseek(f->file, translate((block_num*block_size) + offset2*(sizeof(ext2_inode)), f, boot_sector, vdimap), SEEK_SET);
+  read(f->file, &inode, sizeof(ext2_inode));
   return inode;
 }
 
@@ -199,9 +199,9 @@ bool get_dir_entry(ext2_dir_entry_2 &found, unsigned char *data_block, unsigned 
     if (entry->inode != 0) {
       if (display) cout << f_name << endl;
       else if ((string) f_name == fname) {
-	found = *entry;
-	free(entry);
-	return true;
+	      found = *entry;
+	      free(entry);
+	      return true;
       }
     }
     else {
@@ -233,10 +233,10 @@ int read_block(ext2_inode inode, unsigned int block_num, unsigned int block_size
     if (block_num_3 == 0) hole = true;
     else {
       if (index_1 != -1 && index_2 != -1 && direct == -1){
-	if (lseek(f->file, translate(block_num_3*block_size, f, boot_sector, vdimap), SEEK_SET) < 0) return -1;
-	if (read(f->file, buf, block_size) < 0) return -1;
-	if (index_3 >= (block_size/4)) return -1;
-	block_num_2 = *(((unsigned int *) buf) + index_3);
+	      if (lseek(f->file, translate(block_num_3*block_size, f, boot_sector, vdimap), SEEK_SET) < 0) return -1;
+	      if (read(f->file, buf, block_size) < 0) return -1;
+	      if (index_3 >= (block_size/4)) return -1;
+	      block_num_2 = *(((unsigned int *) buf) + index_3);
       }
       else return -1;
     }
