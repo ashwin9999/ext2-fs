@@ -1,7 +1,7 @@
 #ifndef SUPERBLOCK
 #define SUPERBLOCK
 
-struct __attribute__((packed)) ext2_super_block {
+struct __attribute__ ((packed)) ext2_super_block{
   unsigned int s_inodes_count;
   unsigned int s_blocks_count;
   unsigned int s_r_blocks_count;
@@ -54,6 +54,7 @@ struct __attribute__((packed)) ext2_super_block {
   unsigned int s_default_mount_opts;
   unsigned int s_first_meta_bg;
   unsigned int s_reserved[190];
-};
+
+	};
 
 #endif

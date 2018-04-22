@@ -1,7 +1,7 @@
 #ifndef GROUPDESCRIPTOR
 #define GROUPDESCRIPTOR
 
-struct __attribute__((packed)) ext2_group_descriptor{
+struct __attribute__ ((packed)) ext2_group_descriptor{
   unsigned int block_bitmap;
   unsigned int inode_bitmap;
   unsigned int inode_table;
@@ -10,6 +10,7 @@ struct __attribute__((packed)) ext2_group_descriptor{
   unsigned short used_dirs_count;
   unsigned short pad;
   unsigned int reserved[3];
-};
+
+	};
 
 #endif

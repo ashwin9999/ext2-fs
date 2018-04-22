@@ -16,20 +16,26 @@
 
 using namespace std;
 
-int vdiOpen(VDIFile *vdi, char *fn);
-void vdiClose(VDIFile *f);
-off_t vdiSeek(VDIFile *f, off_t offset, int whence);
-ssize_t vdiRead(VDIFile *f, void *buf, ssize_t n);
-ssize_t vdiWrite(VDIFile *f, void *buf, ssize_t n);
-int read_vdimap(VDIFile *f, unsigned int vdimap[]);
-int read_MBR(VDIFile *f, BootSector &boot);
-int read_superblock(VDIFile *f, BootSector &boot, unsigned int vdimap[], ext2_super_block &super);
-unsigned int translate(unsigned int location, VDIFile *f, BootSector boot_sector, unsigned int vdimap[]);
-int read_group_descriptor(VDIFile *f, BootSector boot_sector, unsigned int vdimap[], unsigned int block_size,ext2_group_descriptor group_descriptor[], unsigned int block_group_count);
-unsigned char* read_bitmap(unsigned int block_size, unsigned int block_id, VDIFile *f, BootSector boot_sector, unsigned int vdimap[]);
-ext2_inode read_inode(VDIFile *f, BootSector boot_sector, unsigned int vdimap[], unsigned int inode_count, unsigned int block_size, ext2_super_block super_block, ext2_group_descriptor group_descriptor[]);
-bool get_dir_entry(ext2_dir_entry_2 &found, unsigned char *data_block, unsigned int size_diff, string fname, bool display);
-int read_block(ext2_inode inode, unsigned int block_num, unsigned int block_size, VDIFile * f, BootSector boot_sector, unsigned int vdimap[], unsigned char *buf);
-void compute_index(unsigned int block_num, unsigned int block_size, int &direct_number, int &indirect_index, int &index_2, int& index_3);
+int vdiOpen(VDIFile* vdi, char* fn);
+void vdiClose(VDIFile* f);
+off_t vdiSeek(VDIFile* f, off_t offset, int whence);
+ssize_t vdiRead(VDIFile* f, void* buf, ssize_t n);
+ssize_t vdiWrite(VDIFile* f, void* buf, ssize_t n);
+int readVdiMap(VDIFile* f, unsigned int vdimap[]);
+int readMbr(VDIFile * f, BootSector & boot);
+int readSuperblock(VDIFile* f, BootSector& boot, unsigned int vdimap[], ext2_super_block& super);
+unsigned int translate(unsigned int location, VDIFile* f, BootSector boot_sector, unsigned int vdimap[]);
+int readGroupDescriptor(VDIFile* f, BootSector boot_sector, unsigned int vdimap[], unsigned int block_size,
+                        ext2_group_descriptor group_descriptor[], unsigned int block_group_count);
+unsigned char* readBitmap(unsigned int block_size, unsigned int block_id, VDIFile* f, BootSector boot_sector,
+                          unsigned int vdimap[]);
+ext2_inode readInode(VDIFile* f, BootSector boot_sector, unsigned int vdimap[], unsigned int inode_count,
+                     unsigned int block_size, ext2_super_block super_block, ext2_group_descriptor group_descriptor[]);
+bool getDirEntry(ext2_dir_entry_2& found, unsigned char* data_block, unsigned int size_diff, string fname,
+                 bool display);
+int readBlock(ext2_inode inode, unsigned int block_num, unsigned int block_size, VDIFile* f, BootSector boot_sector,
+              unsigned int vdimap[], unsigned char* buf);
+void computeIndex(unsigned int block_num, unsigned int block_size, int& direct_number, int& indirect_index,
+                  int& index_2, int& index_3);
 
 #endif
