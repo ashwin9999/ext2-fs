@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 
 	for (int i = 0; i < root_size; i++)
 	{
-		int difference; //This is the size difference 
+		int difference; //This is the size difference
 		difference = readBlock(inode, i, block_size, file, boot_sector, vdiMap, buf);
 		if (difference == -1)
 		{
@@ -132,17 +132,17 @@ int main(int argc, char* argv[])
 	cout << instr << endl;
 
 	stack<int>* dirname_length = new stack<int>; //Stores the lengths for the directories' names
-	bool cont = true;
-	string answer; //Stores the command entered by the user
+	bool loop = true;
+	string instruction; //Stores the command entered by the user
 
-	while (cont)
+	while (loop)
 	{
-		getline(cin, answer);
+		getline(cin, instruction);
 		/**
-		* This is basically used for debugging, testing purposes. 
+		* This is basically used for debugging, testing purposes.
 		* But, if the user wants to view specific details about the structure, can use this.
 		*/
-		if (answer == "view")
+		if (instruction == "view")
 		{
 			display_vdihead(file);
 			display_vdimap(vdiMap);
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
 			/**
 			* Moves the current directory to one level up (just like UNIX)
 			*/
-		else if (answer == "cd ..")
+		else if (instruction == "cd ..")
 		{
 			cout << endl;
 			if (current.inode != 2)
@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
 			/**
 			* Lists the contents of the directory.
 			*/
-		else if (answer == "ls")
+		else if (instruction == "ls")
 		{
 			cout << endl;
 			ext2_inode new_inode = readInode(file, boot_sector, vdiMap, current.inode, block_size, super_block,
@@ -220,12 +220,12 @@ int main(int argc, char* argv[])
 			* Moves to the specified directory (UNIX like)
 			* P.S. - There is no auto-complete by hitting tab like UNIX, so user need to type in the entire dir name.
 			*/
-		else if (answer.compare(0, 3, "cd ") == 0)
+		else if (instruction.compare(0, 3, "cd ") == 0)
 		{
 			cout << endl;
 			ext2_inode new_inode_2 = readInode(file, boot_sector, vdiMap, current.inode, block_size, super_block,
 			                                    group_descriptor);
-			string dir = answer.substr(3, answer.length() - 1); //Extracting the dir name
+			string dir = instruction.substr(3, instruction.length() - 1); //Extracting the dir name
 			char fname[256];
 			memcpy(fname, current.name, current.name_len);
 			if ((string)fname != "..") dirname_length->push((int)current.name_len);
@@ -274,10 +274,10 @@ int main(int argc, char* argv[])
 			/**
 			* Copies file from the vdifile to the specified host location.
 			*/
-		else if (answer.compare(0, 4, "read") == 0)
+		else if (instruction.compare(0, 4, "read") == 0)
 		{
 			cout << endl;
-			stringstream ss(answer);
+			stringstream ss(instruction);
 			vector<string> elements;
 			string item;
 			while (getline(ss, item, ' ')) elements.push_back(item);
@@ -370,11 +370,11 @@ int main(int argc, char* argv[])
 			/**
 			* Copies the file from the host location to the vdifile.
 			*/
-		else if (answer.compare(0, 5, "write") == 0)
+		else if (instruction.compare(0, 5, "write") == 0)
 		{
 			cout << endl;
 			vector<string> elements1;
-			stringstream ss(answer);
+			stringstream ss(instruction);
 			string item;
 			while (getline(ss, item, ' ')) elements1.push_back(item);
 			vector<string> split1 = elements1; //Again just splitting path from instruction
@@ -726,9 +726,9 @@ int main(int argc, char* argv[])
 
 			cout << "File " + hostpath + " successfully written into the ext2 file system at " + ext2path + "." << endl;
 		}
-		else if (answer == "quit")
+		else if (instruction == "quit")
 		{
-			cont = false;
+			loop = false;
 		}
 		cout << endl;
 		cout << "================================================================================" << endl;

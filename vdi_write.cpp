@@ -3,15 +3,15 @@ using namespace std;
 
 int writeSuperblock(VDIFile* f, BootSector boot, unsigned int vdiMap[], ext2_super_block& superBlock)
 {
-	unsigned int superblockLocation = translate(1024, f, boot, vdiMap);
+	unsigned int superblockLocation = computeLocation(1024, f, boot, vdiMap);
 	if (lseek(f->file, superblockLocation, SEEK_SET) < 0)
 	{
-		cout << "Error! Failed to seek to the superblock" << endl;
+		cout << "Failed to seek to the superblock" << endl;
 		return 1;
 	}
 	if (write(f->file, &superBlock, sizeof(superBlock)) != 1024)
 	{
-		cout << "Error! superblock was not written correctly!" << endl;
+		cout << "Superblock was not written correctly!" << endl;
 		return 1;
 	}
 	return 0;
@@ -24,16 +24,16 @@ int writeGroupDescriptor(VDIFile* f, BootSector boot, unsigned int vdiMap[], uns
 	if (blockSize == 1024) groupStart = blockSize * 2;
 	else groupStart = blockSize;
 
-	unsigned int groupLoc = translate(groupStart, f, boot, vdiMap);
+	unsigned int groupLoc = computeLocation(groupStart, f, boot, vdiMap);
 	if (lseek(f->file, groupLoc, SEEK_SET) < 0)
 	{
-		cout << "Error! Failed to seek to the group desc" << endl;
+		cout << "Failed to seek to the group desc" << endl;
 		return 1;
 	}
 	size_t size = sizeof(ext2_group_descriptor) * numberBlockGroups;
 	if (write(f->file, groupDescriptor, size) != size)
 	{
-		cout << "Error! Failed to write group desc" << endl;
+		cout << "Failed to write group desc" << endl;
 		return 1;
 	}
 	return 0;
@@ -42,106 +42,106 @@ int writeGroupDescriptor(VDIFile* f, BootSector boot, unsigned int vdiMap[], uns
 int writeBitmap(VDIFile* f, BootSector boot, unsigned int vdiMap[], unsigned char* bitmap, unsigned int blockSize,
                 unsigned int blockId)
 {
-	if (lseek(f->file, translate(blockId * blockSize, f, boot, vdiMap), SEEK_SET) < 0)
+	if (lseek(f->file, computeLocation(blockId * blockSize, f, boot, vdiMap), SEEK_SET) < 0)
 	{
-		cout << "Error! Failed to seek to bitmap" << endl;
+		cout << "Failed to seek to bitmap" << endl;
 		return 1;
 	}
 	if (write(f->file, bitmap, blockSize) != blockSize)
 	{
-		cout << "Error! Failed to write bitmap" << endl;
+		cout << "Failed to write bitmap" << endl;
 		return 1;
 	}
 	return 0;
 }
 
 int writeBlock(VDIFile* f, BootSector boot, unsigned int vdiMap[], ext2_inode inode,
-               std::vector<unsigned int>& addresses, unsigned int blockNum, unsigned int blockSize, unsigned char* data)
+               std::vector<unsigned int>& address_list, unsigned int blockNum, unsigned int blockSize, unsigned char* data)
 {
 	if (blockNum * blockSize >= inode.size) return -1;
 	unsigned char* buffer = (unsigned char*)malloc(blockSize);
-	int directIndex;
-	int singleIndex;
-	int doubleIndex;
-	int tripleIndex;
+	int direct;
+	int single_index;
+	int double_index;
+	int triple_index;
 
-	computeIndex(blockNum, blockSize, directIndex, singleIndex, doubleIndex, tripleIndex);
+	computeIndex(blockNum, blockSize, direct, single_index, double_index, triple_index);
 	unsigned int tripleBlockNum = inode.i_block[14];
 	unsigned int doubleBlockNum = 0;
-	if (tripleIndex != -1)
+	if (triple_index != -1)
 	{
-		if (doubleIndex != -1 && singleIndex != -1 && directIndex == -1)
+		if (double_index != -1 && single_index != -1 && direct == -1)
 		{
-			if (lseek(f->file, translate(tripleBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
+			if (lseek(f->file, computeLocation(tripleBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
 			if (read(f->file, buffer, blockSize) < 0) return -1;
-			if (tripleIndex >= (blockSize / 4)) return -1;
-			doubleBlockNum = *(((unsigned int *)buffer) + tripleIndex);
+			if (triple_index >= (blockSize / 4)) return -1;
+			doubleBlockNum = *(((unsigned int *)buffer) + triple_index);
 		}
 		else return -1;
 	}
 	unsigned int singleBlockNum = 0;
-	if (doubleIndex != -1)
+	if (double_index != -1)
 	{
-		if (singleIndex != -1 && directIndex == -1)
+		if (single_index != -1 && direct == -1)
 		{
-			if (tripleIndex == -1)
+			if (triple_index == -1)
 			{
 				doubleBlockNum = inode.i_block[13];
 			}
 			if (doubleBlockNum == 0)
 			{
-				doubleBlockNum = addresses.back();
-				addresses.pop_back();
-				*(((unsigned int *)buffer) + tripleIndex) = doubleBlockNum;
-				if (lseek(f->file, translate(tripleBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
+				doubleBlockNum = address_list.back();
+				address_list.pop_back();
+				*(((unsigned int *)buffer) + triple_index) = doubleBlockNum;
+				if (lseek(f->file, computeLocation(tripleBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
 				if (write(f->file, buffer, blockSize) != blockSize) return -1;
 			}
-			if (lseek(f->file, translate(doubleBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
+			if (lseek(f->file, computeLocation(doubleBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
 			if (read(f->file, buffer, blockSize) < 0) return -1;
-			if (doubleIndex >= (blockSize / 4)) return -1;
-			singleBlockNum = *(((unsigned int *)buffer) + doubleIndex);
+			if (double_index >= (blockSize / 4)) return -1;
+			singleBlockNum = *(((unsigned int *)buffer) + double_index);
 		}
 		else return -1;
 	}
 
 	unsigned int directBlockNum = 0;
-	if (singleIndex != -1)
+	if (single_index != -1)
 	{
-		if (directIndex == -1)
+		if (direct == -1)
 		{
-			if (doubleIndex == -1) singleBlockNum = inode.i_block[12];
+			if (double_index == -1) singleBlockNum = inode.i_block[12];
 			if (singleBlockNum == 0)
 			{
-				singleBlockNum = addresses.back();
-				addresses.pop_back();
-				*(((unsigned int *)buffer) + doubleIndex) = singleBlockNum;
-				if (lseek(f->file, translate(doubleBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
+				singleBlockNum = address_list.back();
+				address_list.pop_back();
+				*(((unsigned int *)buffer) + double_index) = singleBlockNum;
+				if (lseek(f->file, computeLocation(doubleBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
 				if (write(f->file, buffer, blockSize) != blockSize) return -1;
 			}
-			if (lseek(f->file, translate(singleBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
+			if (lseek(f->file, computeLocation(singleBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
 			if (read(f->file, buffer, blockSize) < 0) return -1;
-			if (singleIndex >= (blockSize / 4)) return -1;
-			directBlockNum = *(((unsigned int *)buffer) + singleIndex);
+			if (single_index >= (blockSize / 4)) return -1;
+			directBlockNum = *(((unsigned int *)buffer) + single_index);
 		}
 		else return -1;
 	}
 
-	if (directIndex != -1)
+	if (direct != -1)
 	{
-		if (directIndex < 12) directBlockNum = inode.i_block[directIndex];
+		if (direct < 12) directBlockNum = inode.i_block[direct];
 		else return -1;
 	}
 
 	if (directBlockNum == 0)
 	{
-		directBlockNum = addresses.back();
-		addresses.pop_back();
-		*(((unsigned int *)buffer) + singleIndex) = directBlockNum;
-		if (lseek(f->file, translate(singleBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
+		directBlockNum = address_list.back();
+		address_list.pop_back();
+		*(((unsigned int *)buffer) + single_index) = directBlockNum;
+		if (lseek(f->file, computeLocation(singleBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
 		if (write(f->file, buffer, blockSize) != blockSize) return -1;
 	}
 
-	if (lseek(f->file, translate(directBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
+	if (lseek(f->file, computeLocation(directBlockNum * blockSize, f, boot, vdiMap), SEEK_SET) < 0) return -1;
 	if (write(f->file, data, blockSize) != blockSize) return -1;
 	unsigned int diff = inode.size - (blockNum * blockSize);
 	if (diff >= blockSize) return blockSize;
@@ -158,7 +158,7 @@ int writeInode(VDIFile* f, BootSector boot, unsigned int vdiMap[], ext2_inode in
 	unsigned int blockNum = groupDescriptor[groupNum].inode_table + (offset1 / inodesPerBlock);
 	unsigned int offset2 = inodeNum % inodesPerBlock;
 
-	if (lseek(f->file, translate(blockNum * blockSize + offset2 * sizeof(ext2_inode), f, boot, vdiMap),
+	if (lseek(f->file, computeLocation(blockNum * blockSize + offset2 * sizeof(ext2_inode), f, boot, vdiMap),
 	          SEEK_SET) < 0) return 1;
 	if (write(f->file, &inode, sizeof(ext2_inode)) != sizeof(ext2_inode)) return 1;
 

@@ -24,7 +24,7 @@ ssize_t vdiWrite(VDIFile* f, void* buf, ssize_t n);
 int readVdiMap(VDIFile* f, unsigned int vdimap[]);
 int readMbr(VDIFile * f, BootSector & boot);
 int readSuperblock(VDIFile* f, BootSector& boot, unsigned int vdimap[], ext2_super_block& super);
-unsigned int translate(unsigned int location, VDIFile* f, BootSector boot_sector, unsigned int vdimap[]);
+unsigned int computeLocation(unsigned int location, VDIFile* f, BootSector boot_sector, unsigned int vdimap[]);
 int readGroupDescriptor(VDIFile* f, BootSector boot_sector, unsigned int vdimap[], unsigned int block_size,
                         ext2_group_descriptor group_descriptor[], unsigned int block_group_count);
 unsigned char* readBitmap(unsigned int block_size, unsigned int block_id, VDIFile* f, BootSector boot_sector,
