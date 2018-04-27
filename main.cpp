@@ -21,10 +21,10 @@ int main(int argc, char* argv[])
 {
 	int vdiFile;
 	VDIFile* file = new VDIFile;
-	vdiFile = vdiOpen(file, argv[1]);
+	vdiFile = vdiOpen(file, argv[1]); //Opens the vdifile
 	off_t offset;
 	ssize_t numChar;
-	short int magic;
+	short int magic; //For testing purposes
 
 	/**
 	* Reads the vdiheader
@@ -34,13 +34,14 @@ int main(int argc, char* argv[])
 
 	/**
 	* Reads the vdimap
+	* Needed for dynamic files
 	*/
 	int mapChar;
 	unsigned int vdiMap[file->header.blocksInHdd];
 	mapChar = readVdiMap(file, vdiMap);
 
 	/**
-	* Reads the MBR
+	* Reads the MBR (Master Boot Record)
 	*/
 	int numMBR;
 	BootSector boot_sector;
@@ -66,6 +67,7 @@ int main(int argc, char* argv[])
 	unsigned int block_size = 1024 << super_block.s_log_block_size;
 	ext2_group_descriptor group_descriptor[group_count];
 	if (readGroupDescriptor(file, boot_sector, vdiMap, block_size, group_descriptor, group_count) == 1) return 1;
+
 	/**
 	 * Reads the inode
 	 */
@@ -74,7 +76,7 @@ int main(int argc, char* argv[])
 	/**
 	* Fetching directories from the inode
 	*/
-	string path = "Path: /";
+	string path = "Current path: /";
 	string instr = "Instruction: ";
 	unsigned char* buf = (unsigned char*)malloc(block_size);
 	ext2_dir_entry_2 current; //Serves as the current directory
@@ -85,21 +87,20 @@ int main(int argc, char* argv[])
 
 	for (int i = 0; i < root_size; i++)
 	{
-		int difference; //This is the size difference
-		difference = readBlock(inode, i, block_size, file, boot_sector, vdiMap, buf);
-		if (difference == -1)
+		int size_difference;
+		size_difference = readBlock(inode, i, block_size, file, boot_sector, vdiMap, buf);
+		if (size_difference == -1)
 		{
 			cout << "The filesystem couldn't be displayed! - 1" << endl;
 			return 1;
 		}
-		if (getDirEntry(current, buf, difference, ".", false))
+		if (getDirEntry(current, buf, size_difference, ".", false))
 		{
 			//This condition will meet only if the directory entry can be located.
 			found = true;
 			break;
 		}
 	}
-
 	if (!found)
 	{
 		//If the directory cannot be located for some reason
@@ -120,18 +121,14 @@ int main(int argc, char* argv[])
 	cout << "To move one directory up -- cd .." << endl;
 	cout << "To display files within the current directory -- ls" << endl;
 	cout << "To view the individual parts of a vdi file -- view" << endl;
-	cout <<
-		"To copy files from the vdifile into host location -- read [ext2path/filename] [user_path/filename] [NOTE: paths should be in this format: /examples/foo.txt]"
-		<< endl;
-	cout <<
-		"To copy files into the vdifile from host location -- write [user_path/filename] [ext2path/filename] [NOTE: paths should be in this format: /examples/foo.txt]"
-		<< endl;
+	cout << "To copy files from the vdifile into host location -- read [ext2path/filename] [user_path/filename] [NOTE: paths should be in this format: /examples/foo.txt]" << endl;
+	cout << "To copy files into the vdifile from host location -- write [user_path/filename] [ext2path/filename] [NOTE: paths should be in this format: /examples/foo.txt]" << endl;
 	cout << "To quit -- quit" << endl;
 	cout << "================================================================================" << endl;
 	cout << endl;
 	cout << instr << endl;
 
-	stack<int>* dirname_length = new stack<int>; //Stores the lengths for the directories' names
+	stack<int>* name_dir_length = new stack<int>; //Stores the lengths for the directories' names
 	bool loop = true;
 	string instruction; //Stores the command entered by the user
 
@@ -155,7 +152,6 @@ int main(int argc, char* argv[])
 			*/
 		else if (instruction == "cd ..")
 		{
-			cout << endl;
 			if (current.inode != 2)
 			{
 				//Means you're not in root
@@ -163,8 +159,8 @@ int main(int argc, char* argv[])
 				char fname[256];
 				memcpy(fname, current.name, current.name_len);
 				//copies the name_length block of data from the current dir's name to the filename
-				fname[current.name_len] = '\0';
-				if ((string)fname != "..") dirname_length->push((int)current.name_len);
+				fname[current.name_len] = '\0'; //Appending null character to the filename
+				if ((string)fname != "..") name_dir_length->push((int)current.name_len);
 				unsigned int f_size = inode.size / block_size; //calculates file size
 				if (inode.size % block_size > 0) f_size++;
 				found = false;
@@ -186,8 +182,11 @@ int main(int argc, char* argv[])
 				if (!found) cout << "The directory couldnt be located." << endl;
 				else
 				{
-					path = path.substr(0, path.length() - dirname_length->top() - 1); //New path is calculated
-					dirname_length->pop();
+					int bound_1 = path.length();
+					int bound_2 = name_dir_length->top();
+					int bound_final = bound_1 - bound_2 - 1;
+					path = path.substr(0, bound_final); //New path is calculated
+					name_dir_length->pop();
 				}
 			}
 			else cout << "You are at the root already!" << endl;
@@ -198,36 +197,34 @@ int main(int argc, char* argv[])
 			*/
 		else if (instruction == "ls")
 		{
-			cout << endl;
 			ext2_inode new_inode = readInode(file, boot_sector, vdiMap, current.inode, block_size, super_block,
 			                                  group_descriptor);
 			unsigned int file_size = inode.size / block_size;
 			if (inode.size % block_size > 0) file_size++;
 			for (int i = 0; i < file_size; i++)
 			{
-				int diff;
-				diff = readBlock(new_inode, i, block_size, file, boot_sector, vdiMap, buf);
-				if (diff == -1)
+				int size_difference;
+				size_difference = readBlock(new_inode, i, block_size, file, boot_sector, vdiMap, buf);
+				if (size_difference == -1)
 				{
 					cout << "Error displaying the file!" << endl;
 					return 1;
 				}
-				getDirEntry(current, buf, diff, "", true);
+				getDirEntry(current, buf, size_difference, "", true);
 			}
 		}
 			/**
 			* Moves to the specified directory (UNIX like)
 			* P.S. - There is no auto-complete by hitting tab like UNIX, so user need to type in the entire dir name.
 			*/
-		else if (instruction.compare(0, 3, "cd ") == 0)
+		else if (instruction.compare(0, 3, "cd ") == 0) //Need to find a better way than compare if any
 		{
-			cout << endl;
 			ext2_inode new_inode_2 = readInode(file, boot_sector, vdiMap, current.inode, block_size, super_block,
 			                                    group_descriptor);
 			string dir = instruction.substr(3, instruction.length() - 1); //Extracting the dir name
 			char fname[256];
 			memcpy(fname, current.name, current.name_len);
-			if ((string)fname != "..") dirname_length->push((int)current.name_len);
+			if ((string)fname != "..") name_dir_length->push((int)current.name_len);
 			ext2_dir_entry_2 new_dir; //creating a new dir for the source dir
 			unsigned int f_size = new_inode_2.size / block_size;
 			if (new_inode_2.size % block_size > 0) f_size++;
@@ -275,8 +272,7 @@ int main(int argc, char* argv[])
 			*/
 		else if (instruction.compare(0, 4, "read") == 0)
 		{
-			cout << endl;
-			//String parsing for path.
+			//String parsing for path. Need to think of a better way to parse string here.
 			stringstream ss(instruction);
 			vector<string> elements;
 			string item;
@@ -370,7 +366,7 @@ int main(int argc, char* argv[])
 			/**
 			* Copies the file from the host location to the vdifile.
 			*/
-		else if (instruction.compare(0, 5, "write") == 0)
+		else if (instruction.compare(0, 5, "write") == 0) //Need to find a better way
 		{
 			cout << endl;
 			//String parsing for path

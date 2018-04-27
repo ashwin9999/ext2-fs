@@ -181,13 +181,15 @@ int readGroupDescriptor(VDIFile* f, BootSector bootSector, unsigned int vdiMap[]
 
 /**
  * Reads the bitmap.
+ * Again, this matters for dynamic files only.
  */
 unsigned char* readBitmap(unsigned int blockSize, unsigned int blockId, VDIFile* f, BootSector bootSector,
                           unsigned int vdiMap[])
 {
 	unsigned char* bitmap;
 	bitmap = (unsigned char *)malloc(blockSize);
-	lseek(f->file, computeLocation(blockId * blockSize, f, bootSector, vdiMap), SEEK_SET);
+	unsigned int loc = computeLocation(blockId * blockSize, f, bootSector, vdiMap);
+	lseek(f->file,loc, SEEK_SET);
 	read(f->file, bitmap, blockSize);
 	return bitmap;
 }
@@ -206,7 +208,8 @@ ext2_inode readInode(VDIFile* f, BootSector bootSector, unsigned int vdiMap[], u
 	unsigned int blockNum = groupDescriptor[groupCount].inode_table + (offset1 / inodesPerBlock);
 	unsigned int offset2 = inodeCount % inodesPerBlock;
 	unsigned int val = (blockNum * blockSize) + (offset2 * sizeof(ext2_inode));
-	lseek(f->file, computeLocation(val, f, bootSector, vdiMap), SEEK_SET);
+	unsigned int loc = computeLocation(val, f, bootSector, vdiMap);
+	lseek(f->file, loc , SEEK_SET);
 	read(f->file, &inode, sizeof(ext2_inode));
 	return inode;
 }

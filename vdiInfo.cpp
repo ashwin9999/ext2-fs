@@ -66,21 +66,6 @@ void display_superblock(ext2_super_block super)
 	cout << "Blocks per group: " << super.s_blocks_per_group << endl;
 	cout << "Number of fragments per group: " << super.s_frags_per_group << endl;
 	cout << "Number of inodes per group: " << super.s_inodes_per_group << endl;
-	cout << "Mount time: " << super.s_mtime << endl;
-	cout << "Write time: " << super.s_wtime << endl;
-	cout << "Mount count: " << super.s_mnt_count << endl;
-	cout << "Maximal mount count: " << super.s_max_mnt_count << endl;
-	cout << "Magic Number: 0x" << hex << super.s_magic << endl;
-	cout << "File system state: " << dec << super.s_state << endl;
-	cout << "Behaviour when detecting errors: " << super.s_errors << endl;
-	cout << "Minor revision level: " << super.s_minor_rev_level << endl;
-	cout << "Time of last check: " << super.s_lastcheck << endl;
-	cout << "Maximum time between checks: " << super.s_checkinterval << endl;
-	cout << "OS: " << super.s_creator_os << endl;
-	cout << "Revision level: " << super.s_rev_level << endl;
-	cout << "Default uid for reserved blocks: " << super.s_def_resuid << endl;
-	cout << "Default gid for reserved blocks: " << super.s_def_resgid << endl;
-	cout << "===============================" << endl;
 }
 
 void display_group_descriptor(ext2_group_descriptor group[], unsigned int count)

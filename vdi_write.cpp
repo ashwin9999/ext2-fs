@@ -85,7 +85,8 @@ int writeGroupDescriptor(VDIFile* f, BootSector boot, unsigned int vdiMap[], uns
 int writeBitmap(VDIFile* f, BootSector boot, unsigned int vdiMap[], unsigned char* bitmap, unsigned int blockSize,
                 unsigned int blockId)
 {
-	if (lseek(f->file, computeLocation(blockId * blockSize, f, boot, vdiMap), SEEK_SET) < 0)
+	unsigned int loc = computeLocation(blockId * blockSize, f, boot, vdiMap);
+	if (lseek(f->file, loc , SEEK_SET) < 0)
 	{
 		cout << "Failed to seek to bitmap" << endl;
 		return 1;
@@ -200,9 +201,8 @@ int writeInode(VDIFile* f, BootSector boot, unsigned int vdiMap[], ext2_inode in
 	unsigned int inodesPerBlock = blockSize / sizeof(ext2_inode);
 	unsigned int blockNum = groupDescriptor[groupNum].inode_table + (offset1 / inodesPerBlock);
 	unsigned int offset2 = inodeNum % inodesPerBlock;
-
-	if (lseek(f->file, computeLocation(blockNum * blockSize + offset2 * sizeof(ext2_inode), f, boot, vdiMap),
-	          SEEK_SET) < 0) return 1;
+	unsigned int loc = computeLocation(blockNum * blockSize + offset2 * sizeof(ext2_inode), f, boot, vdiMap);
+	if (lseek(f->file, loc, SEEK_SET) < 0) return 1;
 	if (write(f->file, &inode, sizeof(ext2_inode)) != sizeof(ext2_inode)) return 1;
 
 	return 0;
