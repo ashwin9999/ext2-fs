@@ -1,6 +1,30 @@
 #include "vdi_write.h"
 using namespace std;
 
+/**
+Sources used: http://cs.smith.edu/~nhowe/262/oldlabs/ext2.html#locate_file
+http://www.nongnu.org/ext2-doc/ext2.html#DEF-INODES
+https://courses.cs.washington.edu/courses/cse451/09sp/projects/project3light/project3_light.html
+https://www.tldp.org/LDP/tlk/fs/filesystem.html
+*/
+
+bool isInodeFree(unsigned char* bitmap, unsigned int blockSize, unsigned int inodeBlockOffset, unsigned int& address){
+	for (int i = 0; i < blockSize; i++)
+	{
+		unsigned char currentByte = *(bitmap + i);
+		for (int j = 0; j < blockSize; j++)
+		{
+			if (!((currentByte >> j) & 0x1))
+			{
+				address = (inodeBlockOffset + j + i * 8) + 1;
+				*(bitmap + i) = ((1 << j) | currentByte);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 int writeSuperblock(VDIFile* f, BootSector boot, unsigned int vdiMap[], ext2_super_block& superBlock)
 {
 	unsigned int superblockLocation = computeLocation(1024, f, boot, vdiMap);
@@ -15,6 +39,25 @@ int writeSuperblock(VDIFile* f, BootSector boot, unsigned int vdiMap[], ext2_sup
 		return 1;
 	}
 	return 0;
+}
+
+bool isBlockFree(unsigned char* bitmap, unsigned int blockSize, unsigned int blockOffset, unsigned int& address)
+{
+	for (int i = 0; i < blockSize; i++)
+	{
+		unsigned char current_byte = *(bitmap + i);
+		for (int j = 0; j < 8; j++)
+		{
+			if (!((current_byte >> j) & 0x1))
+			{
+				address = blockOffset + i * 8 + j;
+				if (blockSize == 1024) address++;
+				*(bitmap + i) = ((1 << j) | current_byte);
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 int writeGroupDescriptor(VDIFile* f, BootSector boot, unsigned int vdiMap[], unsigned int blockSize,
@@ -163,43 +206,4 @@ int writeInode(VDIFile* f, BootSector boot, unsigned int vdiMap[], ext2_inode in
 	if (write(f->file, &inode, sizeof(ext2_inode)) != sizeof(ext2_inode)) return 1;
 
 	return 0;
-}
-
-bool isBlockFree(unsigned char* bitmap, unsigned int blockSize, unsigned int blockOffset, unsigned int& address)
-{
-	for (int i = 0; i < blockSize; i++)
-	{
-		unsigned char current_byte = *(bitmap + i);
-
-		for (int j = 0; j < 8; j++)
-		{
-			if (!((current_byte >> j) & 0x1))
-			{
-				address = blockOffset + i * 8 + j;
-				if (blockSize == 1024) address++;
-				*(bitmap + i) = ((1 << j) | current_byte);
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-bool isInodeFree(unsigned char* bitmap, unsigned int blockSize, unsigned int inodeBlockOffset,
-                   unsigned int& address)
-{
-	for (int i = 0; i < blockSize; i++)
-	{
-		unsigned char currentByte = *(bitmap + i);
-		for (int j = 0; j < blockSize; j++)
-		{
-			if (!((currentByte >> j) & 0x1))
-			{
-				address = (inodeBlockOffset + j + i * 8) + 1;
-				*(bitmap + i) = ((1 << j) | currentByte);
-				return true;
-			}
-		}
-	}
-	return false;
 }

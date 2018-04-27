@@ -121,10 +121,10 @@ int main(int argc, char* argv[])
 	cout << "To display files within the current directory -- ls" << endl;
 	cout << "To view the individual parts of a vdi file -- view" << endl;
 	cout <<
-		"To copy files from the vdifile into host location -- read [ext2path/filename] [hostpath/filename] [NOTE: paths should be in this format: /examples/foo.txt]"
+		"To copy files from the vdifile into host location -- read [ext2path/filename] [user_path/filename] [NOTE: paths should be in this format: /examples/foo.txt]"
 		<< endl;
 	cout <<
-		"To copy files into the vdifile from host location -- write [hostpath/filename] [ext2path/filename] [NOTE: paths should be in this format: /examples/foo.txt]"
+		"To copy files into the vdifile from host location -- write [user_path/filename] [ext2path/filename] [NOTE: paths should be in this format: /examples/foo.txt]"
 		<< endl;
 	cout << "To quit -- quit" << endl;
 	cout << "================================================================================" << endl;
@@ -170,14 +170,14 @@ int main(int argc, char* argv[])
 				found = false;
 				for (int i = 0; i < f_size; i++)
 				{
-					int difference; //size difference
-					difference = readBlock(inode, i, block_size, file, boot_sector, vdiMap, buf);
-					if (difference == -1)
+					int size_difference;
+					size_difference = readBlock(inode, i, block_size, file, boot_sector, vdiMap, buf);
+					if (size_difference == -1)
 					{
 						cout << "The filesystem couldn't be displayed! -3" << endl;
 						return 1;
 					}
-					if (getDirEntry(current, buf, difference, "..", false))
+					if (getDirEntry(current, buf, size_difference, "..", false))
 					{
 						found = true;
 						break;
@@ -190,9 +190,8 @@ int main(int argc, char* argv[])
 					dirname_length->pop();
 				}
 			}
-			else cout << "You are at the root!" << endl;
+			else cout << "You are at the root already!" << endl;
 			cout << path << endl;
-			cout << instr << endl;
 		}
 			/**
 			* Lists the contents of the directory.
@@ -235,14 +234,14 @@ int main(int argc, char* argv[])
 			found = false;
 			for (int i = 0; i < f_size; i++)
 			{
-				int difference;
-				difference = readBlock(new_inode_2, i, block_size, file, boot_sector, vdiMap, buf);
-				if (difference == -1)
+				int size_difference;
+				size_difference = readBlock(new_inode_2, i, block_size, file, boot_sector, vdiMap, buf);
+				if (size_difference == -1)
 				{
 					cout << "The filesystem couldn't be displayed! - 4" << endl;
 					return 1;
 				}
-				if (getDirEntry(new_dir, buf, difference, dir, false))
+				if (getDirEntry(new_dir, buf, size_difference, dir, false))
 				{
 					found = true;
 					break;
@@ -255,15 +254,15 @@ int main(int argc, char* argv[])
 				{
 					//File_type = 2 means it is a directory.
 					/**
-					file_type		Description
-					0						Unknown
-					1						Regular File
-					2						Directory
-					3						Character Device
-					4						Block Device
-					5						Named pipe
-					6						Socket
-					7						Symbolic Link
+					file_type			Description
+					0							Unknown
+					1							Regular File
+					2							Directory
+					3							Character Device
+					4							Block Device
+					5							Named pipe
+					6							Socket
+					7							Symbolic Link
 					*/
 					current = new_dir;
 					path += dir + "/";
@@ -277,6 +276,7 @@ int main(int argc, char* argv[])
 		else if (instruction.compare(0, 4, "read") == 0)
 		{
 			cout << endl;
+			//String parsing for path.
 			stringstream ss(instruction);
 			vector<string> elements;
 			string item;
@@ -288,14 +288,14 @@ int main(int argc, char* argv[])
 				continue;
 			}
 			string ext2path = split1[1]; //Separating the paths
-			string hostpath = split1[2];
+			string user_path = split1[2];
 			stringstream ss2(ext2path);
 			vector<string> elements2;
 			string item2;
 			while (getline(ss2, item2, '/')) elements2.push_back(item2);
 			vector<string> split2 = elements2; //Extracting the filename from the path
 			ext2_inode current_inode = readInode(file, boot_sector, vdiMap, current.inode, block_size, super_block,
-			                                      group_descriptor);
+			                                      group_descriptor); //Creating a new current inode
 			ext2_dir_entry_2 curr_dir; //Creates a new current directory to work on
 			if (split2.size() < 2)
 			{
@@ -309,14 +309,14 @@ int main(int argc, char* argv[])
 				if (current_inode.size % block_size > 0) fsize++;
 				for (int i = 0; i < fsize; i++)
 				{
-					int difference;
-					difference = readBlock(current_inode, i, block_size, file, boot_sector, vdiMap, buf);
-					if (difference == -1)
+					int size_difference;
+					size_difference = readBlock(current_inode, i, block_size, file, boot_sector, vdiMap, buf);
+					if (size_difference == -1)
 					{
 						cout << "The path for the directory could not be parsed!" << endl;
 						return 1;
 					}
-					if (getDirEntry(curr_dir, buf, difference, split2[j], false))
+					if (getDirEntry(curr_dir, buf, size_difference, split2[j], false))
 					{
 						//split2[j] will have the dir name where it should navigate to
 						found = true;
@@ -334,15 +334,15 @@ int main(int argc, char* argv[])
 					                           group_descriptor);
 				}
 			}
-			if (hostpath.empty())
+			if (user_path.empty())
 			{
-				cout << "Error, please enter a host path" << endl;
+				cout << "Please enter a path in your host system." << endl;
 				continue;
 			}
-			int fd = open(hostpath.c_str(), O_CREAT | O_WRONLY | O_APPEND, S_IRWXU);
+			int fd = open(user_path.c_str(), O_CREAT | O_WRONLY | O_APPEND, S_IRWXU);
 			if (fd < 0)
 			{
-				cout << "The file could not be created in the host path!" << endl;
+				cout << "The file can not be created in the host system in the given user path!" << endl;
 				continue;
 			}
 			if ((int)curr_dir.file_type != 1)
@@ -355,16 +355,16 @@ int main(int argc, char* argv[])
 			if (current_inode.size % block_size > 0) file_size++;
 			for (int i = 0; i < file_size; i++)
 			{
-				int difference = readBlock(current_inode, i, block_size, file, boot_sector, vdiMap, buf);
-				if (difference == -1)
+				int size_difference = readBlock(current_inode, i, block_size, file, boot_sector, vdiMap, buf);
+				if (size_difference == -1)
 				{
 					cout << "The path of the directory could not be parsed! " << endl;
 					return 1;
 				}
-				if (i + 1 == file_size) write(fd, buf, difference); //Forgot why I did this, but there WAS A REASON!!
+				if (i + 1 == file_size) write(fd, buf, size_difference); //Forgot why I did this, but there WAS A REASON!!!
 				else write(fd, buf, block_size);
 			}
-			cout << "The file " + ext2path + " has been copied to " + hostpath + "." << endl;
+			cout << "The file " + ext2path + " has been copied to " + user_path << endl;
 			close(fd);
 		}
 			/**
@@ -373,6 +373,7 @@ int main(int argc, char* argv[])
 		else if (instruction.compare(0, 5, "write") == 0)
 		{
 			cout << endl;
+			//String parsing for path
 			vector<string> elements1;
 			stringstream ss(instruction);
 			string item;
@@ -380,10 +381,10 @@ int main(int argc, char* argv[])
 			vector<string> split1 = elements1; //Again just splitting path from instruction
 			if (split1.size() < 3)
 			{
-				cout << "Error! Not enough arguments." << endl;
+				cout << "Not enough arguments to carry out the action." << endl;
 				continue;
 			}
-			string hostpath = split1[1]; //Separating paths
+			string user_path = split1[1]; //Separating paths
 			string ext2path = split1[2];
 
 			vector<string> elements2;
@@ -399,13 +400,13 @@ int main(int argc, char* argv[])
 			if (split2[split2.size() - 1].empty())
 			{
 				//Filename not provided
-				cout << "Please provide a file name in the ext2 directory" << endl;
+				cout << "Please provide a file name." << endl;
 				continue;
 			}
-			int fd = open(hostpath.c_str(), O_RDONLY);
+			int fd = open(user_path.c_str(), O_RDONLY);
 			if (fd < 0)
 			{
-				cout << "Cannot open the file in the host path!" << endl;
+				cout << "Cannot open the file in the given user path!" << endl;
 				continue;
 			}
 			ext2_inode current_inode = readInode(file, boot_sector, vdiMap, current.inode, block_size, super_block,
@@ -414,14 +415,14 @@ int main(int argc, char* argv[])
 			found = false;
 			for (int i = 0; i < root_size; i++)
 			{
-				int difference;
-				difference = readBlock(inode, i, block_size, file, boot_sector, vdiMap, buf);
-				if (difference == -1)
+				int size_difference;
+				size_difference = readBlock(inode, i, block_size, file, boot_sector, vdiMap, buf);
+				if (size_difference == -1)
 				{
-					cout << "The file system couldn't be displayed! - 5" << endl;
+					cout << "The file system can't be displayed! - 5" << endl;
 					return 1;
 				}
-				if (getDirEntry(current_dir, buf, difference, ".", false))
+				if (getDirEntry(current_dir, buf, size_difference, ".", false))
 				{
 					//get the entry for root dir
 					found = true;
@@ -430,7 +431,7 @@ int main(int argc, char* argv[])
 			}
 			if (!found)
 			{
-				cout << "Error in setting the current dir to the root dir" << endl;
+				cout << "The current dir can not be set to the root dir" << endl;
 				return -1;
 			}
 			found = false;
@@ -440,14 +441,14 @@ int main(int argc, char* argv[])
 				if (current_inode.size % block_size > 0) size++;
 				for (int k = 0; k < size; k++)
 				{
-					int difference;
-					difference = readBlock(current_inode, k, block_size, file, boot_sector, vdiMap, buf);
-					if (difference == -1)
+					int size_difference;
+					size_difference = readBlock(current_inode, k, block_size, file, boot_sector, vdiMap, buf);
+					if (size_difference == -1)
 					{
 						cout << "The dir path could not be parsed!" << endl;
 						return 1;
 					}
-					bool val = getDirEntry(current_dir, buf, difference, split2[j], false);
+					bool val = getDirEntry(current_dir, buf, size_difference, split2[j], false);
 					//Get the entry for the directory where we want to copy the file
 					if (val)
 					{
@@ -465,23 +466,23 @@ int main(int argc, char* argv[])
 					                           group_descriptor);
 			}
 			string name = split2[split2.size() - 1]; //Name of the copied file in the ext2 path.
-			unsigned int new_dir_rec_len = 8 + name.length() + 1; //setting the directory record length
-			if (new_dir_rec_len % 4 > 0) new_dir_rec_len += 4 - (new_dir_rec_len % 4);
+			unsigned int new_record_len = 8 + name.length() + 1; //setting the directory record length
+			if (new_record_len % 4 > 0) new_record_len += 4 - (new_record_len % 4);
 			unsigned int dir_size = current_inode.size / block_size;
 			if (current_inode.size % block_size > 0) dir_size++;
 			unsigned char* last_dir_block = (unsigned char*)malloc(block_size);
-			int difference;
-			difference = readBlock(current_inode, dir_size - 1, block_size, file, boot_sector, vdiMap, last_dir_block);
-			if (difference == -1)
+			int size_difference;
+			size_difference = readBlock(current_inode, dir_size - 1, block_size, file, boot_sector, vdiMap, last_dir_block);
+			if (size_difference == -1)
 			{
-				cout << "The directory path could not be parsed!" << endl;
+				cout << "The directory path can not be parsed!" << endl;
 				return 1;
 			}
 			/**
 			 * I will document the following block of code later.
 			 */
 			unsigned int blocks_for_dir_entry;
-			if (block_size - difference >= new_dir_rec_len) blocks_for_dir_entry = 0;
+			if (block_size - size_difference >= new_record_len) blocks_for_dir_entry = 0;
 			else
 			{
 				int new_direct, old_direct, new_indirect, old_indirect, new_double, old_double, new_triple, old_triple;
@@ -513,13 +514,13 @@ int main(int argc, char* argv[])
 
 			if (f_block_num + blocks_for_addresses + blocks_for_dir_entry > free_block_num)
 			{
-				cout << "Ext2 file system cannot fit the host file" << endl;
+				cout << "The file cannot be fit" << endl;
 				return 1;
 			}
 
 			if (super_block.s_free_inodes_count <= 0)
 			{
-				cout << "Error, there isn't enough room to write a new inode" << endl;
+				cout << "There isn't enough space to write a new inode" << endl;
 				return 1;
 			}
 
@@ -533,7 +534,7 @@ int main(int argc, char* argv[])
 				{
 					if (writeBitmap(file, boot_sector, vdiMap, bitmap, block_size, group_descriptor[i].inode_bitmap) == 1)
 					{
-						cout << "Error in writing the inode bitmap " << endl;
+						cout << "Writing the inode bitmap failed " << endl;
 						return 1;
 					}
 					group_descriptor[i].free_inodes_count--;
@@ -553,7 +554,7 @@ int main(int argc, char* argv[])
 						addresses.push_back(address);
 						if (writeBitmap(file, boot_sector, vdiMap, bitmap, block_size, group_descriptor[j].block_bitmap) == 1)
 						{
-							cout << "Error in writing the block bitmap" << endl;
+							cout << "Writing the block bitmap failed" << endl;
 							return 1;
 						}
 						group_descriptor[j].free_blocks_count--;
@@ -614,43 +615,43 @@ int main(int argc, char* argv[])
 			{
 				if (lseek(fd, i * block_size, SEEK_SET) < 0)
 				{
-					cout << "Couldn't seek the host file" << endl;
+					cout << "The host file cannot be seeked" << endl;
 					return 1;
 				}
 				if (read(fd, buf, block_size) < 0)
 				{
-					cout << "Failed to read a block of data from host file" << endl;
+					cout << "Reading a block of data from user file has failed" << endl;
 					return 1;
 				}
-				int difference = writeBlock(file, boot_sector, vdiMap, new_inode, addresses, i, block_size, buf);
-				if (difference == -1)
+				int size_difference = writeBlock(file, boot_sector, vdiMap, new_inode, addresses, i, block_size, buf);
+				if (size_difference == -1)
 				{
-					cout << "Error in writing a block to the ext2 filesystem" << endl;
+					cout << "Writing a block to the ext2 filesystem failed" << endl;
 					return 1;
 				}
 			}
 			if (writeInode(file, boot_sector, vdiMap, new_inode, inode_address, block_size, super_block,
 			                group_descriptor) == 1)
 			{
-				cout << "Error in writing inode" << endl;
+				cout << "Writing inode has failed." << endl;
 				return 1;
 			}
 			ext2_dir_entry_2 new_dir_entry;
 			new_dir_entry.inode = inode_address;
 			new_dir_entry.name_len = name.length() + 1;
-			new_dir_entry.rec_len = new_dir_rec_len;
+			new_dir_entry.rec_len = new_record_len;
 			new_dir_entry.file_type = 1;
 			memcpy(new_dir_entry.name, name.c_str(), name.size());
 			new_dir_entry.name[name.length()] = '\0';
 			current_inode.size += new_dir_entry.rec_len;
 			vector<unsigned int> empty;
-			if (block_size - difference >= new_dir_entry.rec_len)
+			if (block_size - size_difference >= new_dir_entry.rec_len)
 			{
-				memcpy(last_dir_block + difference, &new_dir_entry, new_dir_entry.rec_len);
+				memcpy(last_dir_block + size_difference, &new_dir_entry, new_dir_entry.rec_len);
 				if (writeBlock(file, boot_sector, vdiMap, current_inode, empty, dir_size - 1, block_size,
 				                last_dir_block) == -1)
 				{
-					cout << "Error in writing the data lock" << endl;
+					cout << "Writing the data block has failed." << endl;
 					return 1;
 				}
 			}
@@ -690,7 +691,7 @@ int main(int argc, char* argv[])
 
 				if (writeBlock(file, boot_sector, vdiMap, current_inode, addresses, dir_size, block_size, new_block) == -1)
 				{
-					cout << "Error writing the data block with the new dir entry" << endl;
+					cout << "Witing the data block has failed" << endl;
 					return 1;
 				}
 				free(new_block);
@@ -699,19 +700,19 @@ int main(int argc, char* argv[])
 
 			if (!addresses.empty())
 			{
-				cout << "All of the allocated addresses were not used" << endl;
+				cout << "The allocated addresses were not completely used" << endl;
 				return 1;
 			}
 
 			if (writeInode(file, boot_sector, vdiMap, current_inode, current_dir.inode, block_size, super_block,
 			                group_descriptor) == 1)
 			{
-				cout << "Error in writing the dir inode" << endl;
+				cout << "Writing the dir inode has failed" << endl;
 				return 1;
 			}
 			if (writeGroupDescriptor(file, boot_sector, vdiMap, block_size, group_descriptor, group_count) == 1)
 			{
-				cout << "Error in writing the group descriptor" << endl;
+				cout << "Writing the group descriptor has failed." << endl;
 				return 1;
 			}
 
@@ -720,11 +721,11 @@ int main(int argc, char* argv[])
 
 			if (writeSuperblock(file, boot_sector, vdiMap, super_block) == 1)
 			{
-				cout << "Error writing the super block" << endl;
+				cout << "Writing the super block has failed." << endl;
 				return 1;
 			}
 
-			cout << "File " + hostpath + " successfully written into the ext2 file system at " + ext2path + "." << endl;
+			cout << "File " + user_path + " has been copied to " + ext2path << endl;
 		}
 		else if (instruction == "quit")
 		{

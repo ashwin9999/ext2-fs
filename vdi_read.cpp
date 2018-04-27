@@ -141,6 +141,7 @@ int readSuperblock(VDIFile* f, BootSector& boot, unsigned int vdiMap[], ext2_sup
 
 /**
  * Helper function to computeLocation the super block location.
+ * This function was basically separated out for dynamic files.
  */
 unsigned int computeLocation(unsigned int location, VDIFile* f, BootSector bootSector, unsigned int vdiMap[])
 {
@@ -149,7 +150,7 @@ unsigned int computeLocation(unsigned int location, VDIFile* f, BootSector bootS
 	unsigned int offset = address2 % f->header.blockSize;
 	unsigned int block = address2 / f->header.blockSize;
 	unsigned int translated_address = vdiMap[block];
-	unsigned int final_address = address1 + translated_address * f->header.blockSize + offset;
+	unsigned int final_address = address1 + translated_address * f->header.blockSize + offset; //Combines the address [Especially useful with dynamic files]
 	return final_address;
 }
 
@@ -162,6 +163,7 @@ int readGroupDescriptor(VDIFile* f, BootSector bootSector, unsigned int vdiMap[]
 	unsigned int start = 0;
 	if (blockSize == 1024) start = 2 * blockSize;
 	else start = 1 * blockSize;
+	//Typically, location would just be 1024 + blockSize, but this takes care of dynamic file as well.
 	unsigned int location = computeLocation(start, f, bootSector, vdiMap);
 	if (lseek(f->file, location, SEEK_SET) < 0)
 	{
@@ -203,15 +205,20 @@ ext2_inode readInode(VDIFile* f, BootSector bootSector, unsigned int vdiMap[], u
 	unsigned int inodesPerBlock = blockSize / sizeof(ext2_inode);
 	unsigned int blockNum = groupDescriptor[groupCount].inode_table + (offset1 / inodesPerBlock);
 	unsigned int offset2 = inodeCount % inodesPerBlock;
-	lseek(f->file, computeLocation((blockNum * blockSize) + offset2 * (sizeof(ext2_inode)), f, bootSector, vdiMap), SEEK_SET);
+	unsigned int val = (blockNum * blockSize) + (offset2 * sizeof(ext2_inode));
+	lseek(f->file, computeLocation(val, f, bootSector, vdiMap), SEEK_SET);
 	read(f->file, &inode, sizeof(ext2_inode));
 	return inode;
 }
 
 /**
  * Fetches the directory entry.
+ * The references for the bottom two functions is given below.
+ * Source: http://cs.smith.edu/~nhowe/262/oldlabs/ext2.html#locate_file
+ * Source: https://courses.cs.washington.edu/courses/cse451/09sp/projects/project3light/project3_light.html
+ * Source: https://www.tldp.org/LDP/tlk/fs/filesystem.html
  */
-bool getDirEntry(ext2_dir_entry_2& found, unsigned char* dataBlock, unsigned int sizeDiff, string fname, bool display)
+bool getDirEntry(ext2_dir_entry_2& found, unsigned char* dataBlock, unsigned int sizeDiff, string fname, bool display_files)
 {
 	ext2_dir_entry_2 * entry = (ext2_dir_entry_2 *)malloc(sizeof(ext2_dir_entry_2));
 	memcpy(entry, dataBlock, sizeof(*entry));
@@ -223,7 +230,7 @@ bool getDirEntry(ext2_dir_entry_2& found, unsigned char* dataBlock, unsigned int
 		f_name[entry->name_len] = '\0'; //Null character appended to the filename.
 		if (entry->inode != 0)
 		{
-			if (display) cout << f_name << endl;
+			if (display_files) cout << f_name << endl;
 			else if ((string)f_name == fname)
 			{
 				found = *entry;
@@ -246,6 +253,7 @@ bool getDirEntry(ext2_dir_entry_2& found, unsigned char* dataBlock, unsigned int
 
 /**
  * Reads a block given its block number, block size, inode.
+ * For this function, I mostly translated a C code from an ext2 reference website. I can't remember the source, however.
  */
 int readBlock(ext2_inode inode, unsigned int blockNum, unsigned int blockSize, VDIFile* f, BootSector bootSector,
               unsigned int vdiMap[], unsigned char* buf)

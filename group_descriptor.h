@@ -1,6 +1,10 @@
 #ifndef GROUPDESCRIPTOR
 #define GROUPDESCRIPTOR
 
+/**
+* lists the ext2_group_desc structure for each block group on the disk.
+* Source: http://cs.smith.edu/~nhowe/262/oldlabs/ext2.html#group
+*/
 struct __attribute__ ((packed)) ext2_group_descriptor{
   unsigned int block_bitmap;
   unsigned int inode_bitmap;

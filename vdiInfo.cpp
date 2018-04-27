@@ -1,6 +1,10 @@
 #include "vdiInfo.h"
 using namespace std;
 
+/**
+* This class was created only for debugging purposes.
+*/
+
 void display_vdihead(VDIFile* f)
 {
 	cout << "Header information" << endl;
