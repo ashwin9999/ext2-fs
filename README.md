@@ -1,6 +1,8 @@
 # OS_project
 Implementation of a program that copies files into and out of a VirtualBox VDI file containing a Linux ext2 filesystem.
 
+By: Ashwin Mishra, Dusti Pilkington
+
 - To build and run:
      * Run ```make``` to compile the code using c++ 11.
      * Run ```./vdi [filename]``` to run the program, file can be a static or a dynamic vdi file.
@@ -33,5 +35,3 @@ Implementation of a program that copies files into and out of a VirtualBox VDI f
 
       - Also, when you write, the content might not be listed immediately. You have to quit. And re-run the program, and then ls to see the added content.
       - Or, you can use this to verfiy that write worked: http://www.vmxray.com/
-
-      
