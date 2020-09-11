@@ -1,7 +1,5 @@
-# OS_project
+# Operating Systems Project
 Implementation of a program that copies files into and out of a VirtualBox VDI file containing a Linux ext2 filesystem.
-
-By: Ashwin Mishra, Dusti Pilkington
 
 - To build and run:
      * Run ```make``` to compile the code using c++ 11.
